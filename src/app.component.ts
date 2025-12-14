@@ -12,9 +12,10 @@ import { UsersComponent } from './components/users.component';
 import { UserRequestsComponent } from './components/user-requests.component';
 import { UserGroupsComponent } from './components/user-groups.component';
 import { GuestUsersComponent } from './components/guest-users.component';
-import { CompanyCreationComponent } from './components/company-creation.component';
-import { LocationCreationComponent } from './components/location-creation.component';
-import { SystemConfigurationComponent } from './components/system-configuration.component';
+import { LocationConfigurationComponent } from './components/location-configuration.component';
+import { TimesheetConfigurationComponent } from './components/timesheet-configuration.component';
+import { MailConfigurationComponent } from './components/mail-configuration.component';
+import { FinancialConfigurationComponent } from './components/financial-configuration.component';
 import { TimeSheetComponent } from './components/time-sheet.component';
 import { LeaveComponent } from './components/leave.component';
 import { AttendanceComponent } from './components/attendance.component';
@@ -67,9 +68,10 @@ import { ProposalComponent } from './components/proposal.component';
     UserRequestsComponent,
     UserGroupsComponent,
     GuestUsersComponent,
-    CompanyCreationComponent,
-    LocationCreationComponent,
-    SystemConfigurationComponent,
+    LocationConfigurationComponent,
+    TimesheetConfigurationComponent,
+    MailConfigurationComponent,
+    FinancialConfigurationComponent,
     TimeSheetComponent,
     LeaveComponent,
     AttendanceComponent,
@@ -122,9 +124,10 @@ export class AppComponent {
     user_requests: 'User Requests',
     user_groups: 'User Groups',
     guest_users: 'Guest Users',
-    company_creation: 'Company Creation',
-    location_creation: 'Location Creation',
-    system_configuration: 'System Configuration',
+    config_location: 'Location Configuration',
+    config_timesheet: 'Timesheet Configuration',
+    config_mail: 'Mail Configuration',
+    config_financial: 'Financial Configuration',
     time_sheet: 'Time Management',
     leave: 'Leave Management',
     attendance: 'Attendance',

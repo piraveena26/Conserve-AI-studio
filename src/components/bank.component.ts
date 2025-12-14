@@ -111,7 +111,7 @@ interface DisplayTransaction {
                         <button (click)="openModal(bank)" class="text-slate-500 hover:text-green-600" title="Edit Bank">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                         </button>
-                        <button (click)="deleteBank(bank.id)" class="text-slate-500 hover:text-red-600" title="Delete Bank">
+                        <button (click)="promptDelete(bank)" class="text-slate-500 hover:text-red-600" title="Delete Bank">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         </button>
                       </div>
@@ -162,6 +162,26 @@ interface DisplayTransaction {
         </div>
       </div>
     }
+
+    <!-- Delete Confirmation Modal -->
+    @if (bankToDelete(); as bank) {
+      <div class="fixed inset-0 bg-black/60 z-50" (click)="cancelDelete()"></div>
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md" (click)="$event.stopPropagation()">
+          <div class="p-6 text-center">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+            </div>
+            <h3 class="mt-4 text-lg font-medium text-slate-900">Delete Bank Account</h3>
+            <p class="mt-2 text-sm text-slate-500">Are you sure you want to delete <strong>{{ bank.name }}</strong>? This action cannot be undone.</p>
+          </div>
+          <div class="bg-slate-50 px-6 py-4 flex justify-center space-x-3 rounded-b-lg">
+            <button (click)="cancelDelete()" type="button" class="px-4 py-2 text-sm font-medium bg-white border rounded-md">Cancel</button>
+            <button (click)="confirmDelete()" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md">Yes, Delete</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
@@ -174,6 +194,7 @@ export class BankComponent {
   showModal = signal(false);
   editingBank = signal<Bank | null>(null);
   viewingBank = signal<Bank | null>(null);
+  bankToDelete = signal<Bank | null>(null);
 
   bankForm = this.fb.group({
     name: ['', Validators.required],
@@ -274,8 +295,23 @@ export class BankComponent {
     this.closeModal();
   }
 
-  deleteBank(bankId: number): void {
-    // NOTE: In a real app, you would add a confirmation dialog here.
+  private deleteBank(bankId: number): void {
     this.daybookService.deleteBank(bankId);
+  }
+
+  promptDelete(bank: Bank): void {
+    this.bankToDelete.set(bank);
+  }
+
+  cancelDelete(): void {
+    this.bankToDelete.set(null);
+  }
+
+  confirmDelete(): void {
+    const bank = this.bankToDelete();
+    if (bank) {
+      this.deleteBank(bank.id);
+      this.cancelDelete();
+    }
   }
 }
