@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } 
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { EmployeeService } from '../services/employee.service';
+import { FinancialConfigService } from '../services/financial-config.service';
 
 interface ContactDetails {
   person: string;
@@ -404,6 +405,7 @@ interface Project {
 })
 export class ProjectsComponent implements OnInit {
   private employeeService = inject(EmployeeService);
+  private financialConfigService = inject(FinancialConfigService);
 
   activeTab = signal<'open' | 'closed' | 'awarded'>('open');
   searchTerm = signal('');
@@ -474,7 +476,7 @@ export class ProjectsComponent implements OnInit {
     { id: 10, division: 'ENGINEERING', rfqId: 'ENG/SA/CO-FS-09-2025', oldProject: 'Feasibility Study', projectId: 'PR-ENG-003', projectName: 'Feasibility Study', client: 'ConstructCo', scope: 'Initial Report', poStatus: 'YES', openStatus: 'NO', expiryDate: '2025-10-31', totalPO: 25000, totalVAT: 3750, monthOfAward: '2025-09', projectStatus: 'Commercially Closed', startDate: '2025-09-01', endDate: '2025-09-30', estimatedTime: '30 days', projectType: 'Project', responsibility: 'Susan Wilson', paymentTerms: 'Prorata Basis', assignees: ['Susan Wilson'], progress: 100 },
   ]);
 
-  divisions = computed(() => [...new Set(this.allProjects().map(p => p.division))]);
+  divisions = computed(() => this.financialConfigService.divisions());
 
   filteredProjects = computed(() => {
     const tab = this.activeTab();

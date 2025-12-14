@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 
@@ -21,6 +21,7 @@ export class FinancialConfigService {
   
   private _taxSettings = signal<DivisionTaxSetting[]>([]);
   public readonly taxSettings = this._taxSettings.asReadonly();
+  public readonly divisions = computed(() => this._taxSettings().map(s => s.name));
   
   constructor() {
     this.loadTaxSettings();

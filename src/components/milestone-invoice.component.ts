@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, computed, inject, signal, output } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { InvoiceService } from '../services/invoice.service';
+import { FinancialConfigService } from '../services/financial-config.service';
 
 @Component({
   selector: 'app-milestone-invoice',
@@ -142,6 +143,7 @@ import { InvoiceService } from '../services/invoice.service';
 })
 export class MilestoneInvoiceComponent {
   private invoiceService = inject(InvoiceService);
+  private financialConfigService = inject(FinancialConfigService);
   viewDetails = output<string>();
 
   // Filters
@@ -153,7 +155,7 @@ export class MilestoneInvoiceComponent {
   // Data
   private allInvoices = this.invoiceService.milestoneInvoices;
   
-  divisions = computed(() => ['All Divisions', ...new Set(this.allInvoices().map(inv => inv.division))]);
+  divisions = computed(() => ['All Divisions', ...this.financialConfigService.divisions()]);
   statuses = signal(['All Status', 'Commercially Open', 'Project Closed']);
 
   filteredInvoices = computed(() => {

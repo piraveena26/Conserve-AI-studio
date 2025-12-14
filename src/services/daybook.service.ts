@@ -2,12 +2,14 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { MainAccount, SubAccount, IncomeEntry, ExpenseEntry, TransferEntry, InhouseEntry, Bank } from '../models/account.model';
+import { FinancialConfigService } from './financial-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DaybookService {
   private http = inject(HttpClient);
+  private financialConfigService = inject(FinancialConfigService);
 
   // --- STATE ---
   private _cashInHand = signal(0);
@@ -19,7 +21,6 @@ export class DaybookService {
   private _expenseEntries = signal<ExpenseEntry[]>([]);
   private _transferEntries = signal<TransferEntry[]>([]);
   private _inhouseEntries = signal<InhouseEntry[]>([]);
-  private _divisions = signal<string[]>([]);
   private _modes = signal<string[]>([]);
   private _banks = signal<Bank[]>([]);
 
@@ -38,7 +39,6 @@ export class DaybookService {
         expense,
         transfer,
         inhouse,
-        divisions,
         modes,
         banks
       ] = await Promise.all([
@@ -49,7 +49,6 @@ export class DaybookService {
         lastValueFrom(this.http.get<ExpenseEntry[]>('/api/daybook/expense')),
         lastValueFrom(this.http.get<TransferEntry[]>('/api/daybook/transfer')),
         lastValueFrom(this.http.get<InhouseEntry[]>('/api/daybook/inhouse')),
-        lastValueFrom(this.http.get<string[]>('/api/daybook/divisions')),
         lastValueFrom(this.http.get<string[]>('/api/daybook/modes')),
         lastValueFrom(this.http.get<Bank[]>('/api/banks'))
       ]);
@@ -62,7 +61,6 @@ export class DaybookService {
       this._expenseEntries.set(expense);
       this._transferEntries.set(transfer);
       this._inhouseEntries.set(inhouse);
-      this._divisions.set(divisions);
       this._modes.set(modes);
       this._banks.set(banks);
 
@@ -80,7 +78,7 @@ export class DaybookService {
   public readonly expenseEntries = this._expenseEntries.asReadonly();
   public readonly transferEntries = this._transferEntries.asReadonly();
   public readonly inhouseEntries = this._inhouseEntries.asReadonly();
-  public readonly divisions = this._divisions.asReadonly();
+  public readonly divisions = this.financialConfigService.divisions;
   public readonly modes = this._modes.asReadonly();
   public readonly banks = this._banks.asReadonly();
 

@@ -1,9 +1,9 @@
-
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { EnquiryService, Enquiry, Scope, Client } from '../services/enquiry.service';
 import { EmployeeService } from '../services/employee.service';
+import { FinancialConfigService } from '../services/financial-config.service';
 
 type EnquiryTab = 'allEnquiry' | 'followUp' | 'addScope' | 'allClients';
 
@@ -526,6 +526,7 @@ type EnquiryTab = 'allEnquiry' | 'followUp' | 'addScope' | 'allClients';
 export class EnquiryComponent implements OnInit {
   private readonly enquiryService = inject(EnquiryService);
   private readonly employeeService = inject(EmployeeService);
+  private readonly financialConfigService = inject(FinancialConfigService);
 
   activeTab = signal<EnquiryTab>('allEnquiry');
   showColumnsDropdown = signal(false);
@@ -577,10 +578,7 @@ export class EnquiryComponent implements OnInit {
   ];
   visibleColumns = signal(new Set(this.allColumns.map(c => c.id)));
 
-  divisions = computed(() => {
-    const divisionSet = new Set(this.enquiries().map(e => e.division));
-    return Array.from(divisionSet);
-  });
+  divisions = this.financialConfigService.divisions;
   subDivisions = signal(['Deputation', 'Project']);
 
   ngOnInit() {
