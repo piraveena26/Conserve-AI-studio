@@ -235,3 +235,167 @@ export class EmployeeService {
     );
   }
 }
+
+// --- SHIFT SERVICE ---
+
+export interface Shift {
+  id: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  assignedEmployees: string[];
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ShiftService {
+  private readonly _shifts = signal<Shift[]>([
+    { id: 1, name: 'Morning Shift', startTime: '09:00', endTime: '17:00', assignedEmployees: ['John Doe', 'Jane Smith'] },
+    { id: 2, name: 'Evening Shift', startTime: '17:00', endTime: '01:00', assignedEmployees: ['Susan Wilson'] },
+    { id: 3, name: 'Night Shift', startTime: '01:00', endTime: '09:00', assignedEmployees: ['Allyce Brown'] }
+  ]);
+  private _nextId = signal(4);
+
+  public readonly shifts = this._shifts.asReadonly();
+
+  addShift(data: { name: string, startTime: string, endTime: string }) {
+    const newShift: Shift = {
+      id: this._nextId(),
+      ...data,
+      assignedEmployees: []
+    };
+    this._shifts.update(shifts => [...shifts, newShift]);
+    this._nextId.update(id => id + 1);
+  }
+
+  updateShift(updatedShift: Omit<Shift, 'assignedEmployees'>) {
+    this._shifts.update(shifts =>
+      shifts.map(s => s.id === updatedShift.id ? { ...s, ...updatedShift } : s)
+    );
+  }
+
+  deleteShift(id: number) {
+    this._shifts.update(shifts => shifts.filter(s => s.id !== id));
+  }
+}
+
+
+// --- ATTENDANCE SERVICE ---
+
+export interface AttendanceRecord {
+  id: number;
+  employeeId: string;
+  checkIn: Date;
+  checkOut: Date | null;
+  location: string;
+  locationType: 'Office' | 'Project site' | 'Remote';
+  shift: string;
+  date: string; // YYYY-MM-DD
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AttendanceService {
+  private _records = signal<AttendanceRecord[]>([]);
+  private _nextId = signal(1);
+
+  public readonly records = this._records.asReadonly();
+
+  hasCheckedInToday(employeeId: string): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return this.records().some(r => r.employeeId === employeeId && r.date === today);
+  }
+
+  checkIn(data: { employeeId: string, location: string, locationType: 'Office' | 'Project site' | 'Remote', shift: string }): void {
+    if (this.hasCheckedInToday(data.employeeId)) {
+      console.error('User has already checked in today.');
+      throw new Error('You have already checked in for today. Multiple check-ins on the same day are not allowed.');
+    }
+
+    const now = new Date();
+    const newRecord: AttendanceRecord = {
+      id: this._nextId(),
+      employeeId: data.employeeId,
+      checkIn: now,
+      checkOut: null,
+      location: data.location,
+      locationType: data.locationType,
+      shift: data.shift,
+      date: now.toISOString().split('T')[0],
+    };
+    this._records.update(records => [...records, newRecord]);
+    this._nextId.update(id => id + 1);
+  }
+
+  checkOut(employeeId: string): void {
+    const now = new Date();
+    this._records.update(records =>
+      records.map(record => {
+        if (record.employeeId === employeeId && record.checkOut === null) {
+          return { ...record, checkOut: now };
+        }
+        return record;
+      })
+    );
+  }
+
+  getActiveCheckin(employeeId: string): AttendanceRecord | undefined {
+    return this._records().find(r => r.employeeId === employeeId && r.checkOut === null);
+  }
+}
+
+// --- LEAVE SERVICE ---
+
+export interface LeaveRequest {
+  id: number;
+  employeeId: string;
+  leaveType: string;
+  leaveRange: 'One Day' | 'More Than a Day';
+  date?: string; // YYYY-MM-DD for single day
+  fromDate?: string; // YYYY-MM-DD
+  toDate?: string; // YYYY-MM-DD
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  appliedOn: Date;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class LeaveService {
+  private readonly _leaveRequests = signal<LeaveRequest[]>([
+     { id: 1, employeeId: 'EMP003', leaveType: 'Vacation', leaveRange: 'More Than a Day', fromDate: '2025-12-10', toDate: '2025-12-15', reason: 'Family trip', status: 'Approved', appliedOn: new Date('2025-11-20') },
+     { id: 2, employeeId: 'EMP004', leaveType: 'Sick Leave', leaveRange: 'One Day', date: '2025-12-16', reason: 'Fever', status: 'Approved', appliedOn: new Date('2025-12-16') },
+  ]);
+  public readonly leaveRequests = this._leaveRequests.asReadonly();
+
+  getOnLeaveEmployeeIdsForDate(date: string): string[] {
+    const onLeave = new Set<string>();
+    
+    const targetDate = new Date(date);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    this.leaveRequests().forEach(req => {
+      if (req.status === 'Approved') {
+        if (req.leaveRange === 'One Day' && req.date) {
+            const reqDate = new Date(req.date);
+            reqDate.setUTCHours(0, 0, 0, 0);
+            if (reqDate.getTime() === targetDate.getTime()) {
+                onLeave.add(req.employeeId);
+            }
+        } else if (req.leaveRange === 'More Than a Day' && req.fromDate && req.toDate) {
+          const from = new Date(req.fromDate);
+          from.setUTCHours(0, 0, 0, 0);
+          const to = new Date(req.toDate);
+          to.setUTCHours(0, 0, 0, 0);
+          if (targetDate >= from && targetDate <= to) {
+            onLeave.add(req.employeeId);
+          }
+        }
+      }
+    });
+    return Array.from(onLeave);
+  }
+}

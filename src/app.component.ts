@@ -119,6 +119,9 @@ export class AppComponent {
   selectedStatementId = signal<string | null>(null);
   statementViewMode = signal<'project' | 'client'>('project');
   
+  private viewHistory = signal<string[]>([]);
+  public canGoBack = computed(() => this.viewHistory().length > 0);
+  
   currentUserEmployeeId = computed(() => this.userService.currentUser()?.employeeId);
 
   private readonly viewTitleMap: { [key: string]: string } = {
@@ -175,6 +178,14 @@ export class AppComponent {
 
   currentTitle = computed(() => this.viewTitleMap[this.activeView()] ?? 'Dashboard');
 
+  private navigateTo(view: string): void {
+    const currentView = this.activeView();
+    if (view !== currentView) {
+      this.viewHistory.update(history => [...history, currentView]);
+      this.activeView.set(view);
+    }
+  }
+
   handleViewChange(view: string): void {
     if (view !== 'employee-360') {
       this.selectedEmployeeId.set(null);
@@ -185,32 +196,43 @@ export class AppComponent {
     if (view !== 'statement_of_account_details') {
       this.selectedStatementId.set(null);
     }
-    this.activeView.set(view);
+    this.navigateTo(view);
   }
   
   showEmployeeProfile(employeeId: string): void {
     this.selectedEmployeeId.set(employeeId);
-    this.activeView.set('employee-360');
+    this.navigateTo('employee-360');
   }
 
   showInvoiceDetails(projectId: string): void {
     this.selectedInvoiceProjectId.set(projectId);
-    this.activeView.set('invoice_details');
+    this.navigateTo('invoice_details');
   }
 
   showStatementProjectDetails(projectId: string): void {
     this.selectedStatementId.set(projectId);
     this.statementViewMode.set('project');
-    this.activeView.set('statement_of_account_details');
+    this.navigateTo('statement_of_account_details');
   }
 
   showStatementClientDetails(projectId: string): void {
     this.selectedStatementId.set(projectId);
     this.statementViewMode.set('client');
-    this.activeView.set('statement_of_account_details');
+    this.navigateTo('statement_of_account_details');
+  }
+
+  handleGoBack(): void {
+    const history = this.viewHistory();
+    if (history.length > 0) {
+        const previousView = history[history.length - 1];
+        this.viewHistory.update(h => h.slice(0, -1));
+        this.activeView.set(previousView);
+    }
   }
 
   handleLogout(): void {
     this.userService.logout();
+    this.activeView.set('dashboard');
+    this.viewHistory.set([]);
   }
 }

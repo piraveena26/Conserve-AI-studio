@@ -1,14 +1,22 @@
 
 import { Component, ChangeDetectionStrategy, input, output, computed, inject, signal, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { UserService } from '../services/user.service';
-import { EmployeeService } from '../services/employee.service';
+import { EmployeeService, ShiftService, AttendanceService, Shift } from '../services/employee.service';
 
 @Component({
   selector: 'app-header',
   template: `
     <header class="relative z-10 h-16 bg-white/70 backdrop-blur-xl shadow-sm flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
       <div class="flex items-center space-x-2 text-sm text-gray-500">
+        @if (canGoBack()) {
+          <button (click)="goBack.emit()" class="mr-2 flex items-center justify-center h-9 w-9 rounded-lg border border-blue-200 text-slate-600 hover:bg-slate-100 hover:border-blue-400 transition-colors" title="Go back">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        }
         <button (click)="viewChanged.emit('dashboard')" class="hover:text-gray-800">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -23,25 +31,50 @@ import { EmployeeService } from '../services/employee.service';
       </div>
       <div class="flex items-center space-x-4">
         
-        <div class="flex items-center space-x-2">
-          <!-- Check-in/Check-out button -->
-          <button (click)="toggleTimer()" 
-                  class="px-4 py-2 border rounded-full text-sm font-semibold flex items-center space-x-2 transition-colors w-32 justify-center"
-                  [class]="isRunning() ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'">
+        <div class="relative">
+          <button #checkinButton (click)="toggleTimer()" [disabled]="isCheckinDisabled()"
+                  class="px-4 py-2 border rounded-full text-sm font-semibold flex items-center space-x-2 transition-colors w-32 justify-center bg-white hover:bg-cyan-50 border-cyan-400 text-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:border-slate-300 disabled:text-slate-400">
             @if (isRunning()) {
-              <!-- Check Out Icon -->
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-2m-4-2h8m0 0l-3-3m3 3l-3 3" />
               </svg>
+              <span class="font-mono tracking-wider">{{ formattedTime() }}</span>
             } @else {
-              <!-- Check In Icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" />
-              </svg>
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" /></svg>
+              <span>{{ hasCheckedInToday() ? 'Completed' : 'Check In' }}</span>
             }
-            <span class="font-mono tracking-wider">{{ formattedTime() }}</span>
           </button>
+          
+          @if(showCheckinDropdown()) {
+            <div #checkinDropdown class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-200 z-50 p-4">
+              <form [formGroup]="checkinForm" (ngSubmit)="onCheckinSubmit()">
+                <h3 class="font-semibold text-slate-800 mb-4 text-base">Start your shift</h3>
+                <div class="space-y-4">
+                  <input type="text" formControlName="location" placeholder="Location" class="form-input w-full rounded-md border-slate-300 p-2 text-sm">
+                  <select formControlName="locationType" class="form-select w-full rounded-md border-slate-300 p-2 text-sm bg-white">
+                    <option value="" disabled>Location Type</option>
+                    @for(type of locationTypes; track type) {
+                      <option [value]="type">{{type}}</option>
+                    }
+                  </select>
+                  <select formControlName="shift" class="form-select w-full rounded-md border-slate-300 p-2 text-sm bg-white">
+                    <option [ngValue]="null" disabled>Shift</option>
+                    @for(s of shifts(); track s.id) {
+                      <option [ngValue]="s">{{ s.name }} ({{ s.startTime }} - {{ s.endTime }})</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex justify-end mt-4">
+                  <button type="submit" [disabled]="checkinForm.invalid" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                    Check In
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+        </div>
 
+        <div class="flex items-center space-x-2">
           <!-- Settings button -->
           <button class="p-2 h-10 w-10 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -85,7 +118,7 @@ import { EmployeeService } from '../services/employee.service';
     </header>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   host: {
     '(document:click)': 'onDocumentClick($event)',
   }
@@ -93,21 +126,41 @@ import { EmployeeService } from '../services/employee.service';
 export class HeaderComponent implements OnDestroy {
   title = input.required<string>();
   activeView = input.required<string>();
+  canGoBack = input<boolean>(false);
   viewChanged = output<string>();
   logout = output<void>();
+  goBack = output<void>();
   
   private userService = inject(UserService);
   private employeeService = inject(EmployeeService);
+  private shiftService = inject(ShiftService);
+  private attendanceService = inject(AttendanceService);
+  private fb = inject(FormBuilder);
   
   private timerId: any = null;
   isRunning = signal(false);
   startTime = signal<number | null>(null);
   elapsedTime = signal(0); // in seconds
+  showCheckinDropdown = signal(false);
+  
+  shifts = this.shiftService.shifts;
+  locationTypes: Array<'Office' | 'Project site' | 'Remote'> = ['Office', 'Project site', 'Remote'];
+  checkinForm: FormGroup;
 
   isDropdownOpen = signal(false);
 
+  hasCheckedInToday = computed(() => {
+    const user = this.currentUser();
+    if (!user?.employeeId) return false;
+    return this.attendanceService.hasCheckedInToday(user.employeeId);
+  });
+
+  isCheckinDisabled = computed(() => !this.isRunning() && this.hasCheckedInToday());
+
   @ViewChild('dropdownButton') dropdownButton?: ElementRef;
   @ViewChild('dropdownMenu') dropdownMenu?: ElementRef;
+  @ViewChild('checkinButton') checkinButton?: ElementRef;
+  @ViewChild('checkinDropdown') checkinDropdown?: ElementRef;
 
   formattedTime = computed(() => {
     const totalSeconds = this.elapsedTime();
@@ -117,21 +170,19 @@ export class HeaderComponent implements OnDestroy {
     return `${hours}:${minutes}:${seconds}`;
   });
 
-  toggleTimer(): void {
-    if (this.isRunning()) {
-        // Stop the timer
-        this.isRunning.set(false);
-        if (this.timerId) {
-            clearInterval(this.timerId);
-            this.timerId = null;
-        }
-        this.startTime.set(null);
-        this.elapsedTime.set(0); // Reset for next time
-    } else {
-        // Start the timer
+  constructor() {
+    this.checkinForm = this.fb.group({
+      location: ['', Validators.required],
+      locationType: ['', Validators.required],
+      shift: [null as Shift | null, Validators.required]
+    });
+
+    const currentUser = this.userService.currentUser();
+    if (currentUser?.employeeId) {
+      const activeCheckin = this.attendanceService.getActiveCheckin(currentUser.employeeId);
+      if (activeCheckin) {
         this.isRunning.set(true);
-        this.startTime.set(Date.now());
-        this.elapsedTime.set(0);
+        this.startTime.set(activeCheckin.checkIn.getTime());
         this.timerId = setInterval(() => {
             const now = Date.now();
             const start = this.startTime();
@@ -139,7 +190,66 @@ export class HeaderComponent implements OnDestroy {
                 this.elapsedTime.set(Math.floor((now - start) / 1000));
             }
         }, 1000);
+      }
     }
+  }
+
+  toggleTimer(): void {
+    if (this.isRunning()) {
+      this.onCheckout();
+    } else if (!this.hasCheckedInToday()) {
+      this.showCheckinDropdown.set(true);
+    }
+  }
+
+  onCheckinSubmit(): void {
+    if (this.checkinForm.invalid) return;
+
+    const currentUser = this.userService.currentUser();
+    if (!currentUser || !currentUser.employeeId) return;
+
+    const formValue = this.checkinForm.value;
+    
+    try {
+      this.attendanceService.checkIn({
+          employeeId: currentUser.employeeId,
+          location: formValue.location,
+          locationType: formValue.locationType,
+          shift: formValue.shift.name,
+      });
+      
+      this.isRunning.set(true);
+      this.startTime.set(Date.now());
+      this.elapsedTime.set(0);
+      this.timerId = setInterval(() => {
+          const now = Date.now();
+          const start = this.startTime();
+          if (start) {
+              this.elapsedTime.set(Math.floor((now - start) / 1000));
+          }
+      }, 1000);
+
+      this.showCheckinDropdown.set(false);
+      this.checkinForm.reset({locationType: '', shift: null});
+    } catch (error) {
+        alert((error as Error).message);
+        this.showCheckinDropdown.set(false);
+    }
+  }
+  
+  onCheckout(): void {
+    const currentUser = this.userService.currentUser();
+    if (!currentUser || !currentUser.employeeId) return;
+    
+    this.attendanceService.checkOut(currentUser.employeeId);
+
+    this.isRunning.set(false);
+    if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+    }
+    this.startTime.set(null);
+    this.elapsedTime.set(0);
   }
 
   ngOnDestroy(): void {
@@ -187,14 +297,16 @@ export class HeaderComponent implements OnDestroy {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as Node;
 
-    // If the click is on the button that toggles the dropdown, let the (click) event binding handle it.
     if (this.dropdownButton?.nativeElement.contains(target)) {
       return;
     }
 
-    // If the dropdown is open and the click is outside of the menu, close it.
     if (this.isDropdownOpen() && this.dropdownMenu && !this.dropdownMenu.nativeElement.contains(target)) {
       this.closeDropdown();
+    }
+
+    if (this.showCheckinDropdown() && this.checkinDropdown && !this.checkinDropdown.nativeElement.contains(target) && !this.checkinButton?.nativeElement.contains(target)) {
+        this.showCheckinDropdown.set(false);
     }
   }
 }

@@ -1,15 +1,8 @@
 
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface Shift {
-  id: number;
-  name: string;
-  startTime: string;
-  endTime: string;
-  assignedEmployees: string[];
-}
+import { Shift, ShiftService } from '../services/employee.service';
 
 @Component({
   selector: 'app-shifts',
@@ -178,18 +171,14 @@ interface Shift {
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class ShiftsComponent {
+  private shiftService = inject(ShiftService);
+
   showModal = signal(false);
   editingShift = signal<Shift | null>(null);
   shiftToDelete = signal<Shift | null>(null);
   shiftToView = signal<Shift | null>(null);
   
-  shifts = signal<Shift[]>([
-    { id: 1, name: 'Morning Shift', startTime: '09:00', endTime: '17:00', assignedEmployees: ['John Doe', 'Jane Smith'] },
-    { id: 2, name: 'Evening Shift', startTime: '17:00', endTime: '01:00', assignedEmployees: ['Susan Wilson'] },
-    { id: 3, name: 'Night Shift', startTime: '01:00', endTime: '09:00', assignedEmployees: ['Allyce Brown'] }
-  ]);
-  
-  private nextId = signal(4);
+  shifts = this.shiftService.shifts;
 
   shiftForm = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -226,19 +215,9 @@ export class ShiftsComponent {
     const currentShift = this.editingShift();
 
     if (currentShift) {
-      this.shifts.update(shifts => 
-        shifts.map(s => s.id === currentShift.id ? { ...s, name: formValue.name!, startTime: formValue.startTime!, endTime: formValue.endTime! } : s)
-      );
+      this.shiftService.updateShift({ id: currentShift.id, ...formValue });
     } else {
-      const newShift: Shift = {
-        id: this.nextId(),
-        name: formValue.name!,
-        startTime: formValue.startTime!,
-        endTime: formValue.endTime!,
-        assignedEmployees: [] // new shifts have no employees assigned initially
-      };
-      this.shifts.update(shifts => [...shifts, newShift]);
-      this.nextId.update(id => id + 1);
+      this.shiftService.addShift(formValue);
     }
     this.closeModal();
   }
@@ -254,7 +233,7 @@ export class ShiftsComponent {
   confirmDelete(): void {
     const shift = this.shiftToDelete();
     if (shift) {
-      this.shifts.update(shifts => shifts.filter(s => s.id !== shift.id));
+      this.shiftService.deleteShift(shift.id);
       this.cancelDelete();
     }
   }
