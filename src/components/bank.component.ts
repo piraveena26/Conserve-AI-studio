@@ -270,33 +270,33 @@ export class BankComponent {
     this.showModal.set(false);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.bankForm.invalid) return;
 
     const formValue = this.bankForm.getRawValue();
     const currentBank = this.editingBank();
 
-    if (currentBank) {
-      this.daybookService.updateBank({
-        id: currentBank.id,
-        name: formValue.name!,
-        code: formValue.code!,
-        accountNumber: formValue.accountNumber!,
-        branch: formValue.branch!
-      });
-    } else {
-      this.daybookService.addBank({
-        name: formValue.name!,
-        code: formValue.code!,
-        accountNumber: formValue.accountNumber!,
-        branch: formValue.branch!
-      });
+    try {
+      if (currentBank) {
+        await this.daybookService.updateBank({
+          id: currentBank.id,
+          name: formValue.name!,
+          code: formValue.code!,
+          accountNumber: formValue.accountNumber!,
+          branch: formValue.branch!
+        });
+      } else {
+        await this.daybookService.addBank({
+          name: formValue.name!,
+          code: formValue.code!,
+          accountNumber: formValue.accountNumber!,
+          branch: formValue.branch!
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save bank', error);
     }
     this.closeModal();
-  }
-
-  private deleteBank(bankId: number): void {
-    this.daybookService.deleteBank(bankId);
   }
 
   promptDelete(bank: Bank): void {
@@ -307,11 +307,16 @@ export class BankComponent {
     this.bankToDelete.set(null);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const bank = this.bankToDelete();
     if (bank) {
-      this.deleteBank(bank.id);
-      this.cancelDelete();
+      try {
+        await this.daybookService.deleteBank(bank.id);
+      } catch(error) {
+        console.error('Failed to delete bank', error);
+      } finally {
+        this.cancelDelete();
+      }
     }
   }
 }

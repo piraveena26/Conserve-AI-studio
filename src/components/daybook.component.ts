@@ -875,53 +875,73 @@ editInHouseEntry(entry: InhouseEntry): void {
   closeInHouseEntryModal() { this.showInHouseEntryModal.set(false); }
 
   // Submit handlers
-  onIncomeSubmit(): void {
+  async onIncomeSubmit(): Promise<void> {
     if (this.incomeEntryForm.invalid) return;
     const editing = this.editingIncomeEntry();
-    if (editing) {
-      this.daybookService.updateIncomeEntry(editing.id, this.incomeEntryForm.value);
-    } else {
-      this.daybookService.addIncomeEntry(this.incomeEntryForm.value);
-    }
+    try {
+        if (editing) {
+          await this.daybookService.updateIncomeEntry(editing.id, this.incomeEntryForm.value);
+        } else {
+          await this.daybookService.addIncomeEntry(this.incomeEntryForm.value);
+        }
+    } catch (error) { console.error('Failed to save income entry', error); }
     this.closeIncomeEntryModal();
   }
 
-  onExpenseSubmit(): void {
+  async onExpenseSubmit(): Promise<void> {
     if (this.expenseEntryForm.invalid) return;
     const editing = this.editingExpenseEntry();
-    if (editing) {
-      this.daybookService.updateExpenseEntry(editing.id, this.expenseEntryForm.value);
-    } else {
-      this.daybookService.addExpenseEntry(this.expenseEntryForm.value);
-    }
+    try {
+      if (editing) {
+        await this.daybookService.updateExpenseEntry(editing.id, this.expenseEntryForm.value);
+      } else {
+        await this.daybookService.addExpenseEntry(this.expenseEntryForm.value);
+      }
+    } catch (error) { console.error('Failed to save expense entry', error); }
     this.closeExpenseEntryModal();
   }
   
-  onTransferSubmit(): void {
+  async onTransferSubmit(): Promise<void> {
     if (this.transferEntryForm.invalid) return;
     const editing = this.editingTransferEntry();
-    if(editing) {
-      this.daybookService.updateTransferEntry(editing.id, this.transferEntryForm.value);
-    } else {
-      this.daybookService.addTransferEntry(this.transferEntryForm.value);
-    }
+    try {
+      if(editing) {
+        await this.daybookService.updateTransferEntry(editing.id, this.transferEntryForm.value);
+      } else {
+        await this.daybookService.addTransferEntry(this.transferEntryForm.value);
+      }
+    } catch (error) { console.error('Failed to save transfer entry', error); }
     this.closeTransferModal();
   }
 
-  onInHouseSubmit(): void {
+  async onInHouseSubmit(): Promise<void> {
     if (this.inHouseEntryForm.invalid) return;
     const editing = this.editingInHouseEntry();
-    if (editing) {
-      this.daybookService.updateInhouseEntry(editing.id, this.inHouseEntryForm.value);
-    } else {
-      this.daybookService.addInhouseEntry(this.inHouseEntryForm.value);
-    }
+    try {
+      if (editing) {
+        await this.daybookService.updateInhouseEntry(editing.id, this.inHouseEntryForm.value);
+      } else {
+        await this.daybookService.addInhouseEntry(this.inHouseEntryForm.value);
+      }
+    } catch (error) { console.error('Failed to save in-house entry', error); }
     this.closeInHouseEntryModal();
   }
 
   // Delete handlers
-  deleteIncomeEntry(id: number): void { this.daybookService.deleteIncomeEntry(id); }
-  deleteExpenseEntry(id: number): void { this.daybookService.deleteExpenseEntry(id); }
-  deleteTransferEntry(id: number): void { this.daybookService.deleteTransferEntry(id); }
-  deleteInHouseEntry(id: number): void { this.daybookService.deleteInhouseEntry(id); }
+  async deleteIncomeEntry(id: number): Promise<void> { 
+    try { await this.daybookService.deleteIncomeEntry(id); }
+    catch (error) { console.error('Failed to delete income entry', error); }
+  }
+  async deleteExpenseEntry(id: number): Promise<void> { 
+    try { await this.daybookService.deleteExpenseEntry(id); }
+    catch (error) { console.error('Failed to delete expense entry', error); }
+  }
+  async deleteTransferEntry(id: number): Promise<void> { 
+    try { await this.daybookService.deleteTransferEntry(id); }
+    catch (error) { console.error('Failed to delete transfer entry', error); }
+  }
+  async deleteInHouseEntry(id: number): Promise<void> { 
+    try { await this.daybookService.deleteInhouseEntry(id); }
+    catch (error) { console.error('Failed to delete in-house entry', error); }
+  }
 }

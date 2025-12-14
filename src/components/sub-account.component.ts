@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SubAccount } from './accounts.component';
+import { SubAccount } from '../services/account.service';
 
 @Component({
   selector: 'app-sub-account',

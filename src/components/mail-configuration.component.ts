@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
+import { MailConfigService, MailConfiguration } from '../services/mail-config.service';
 
 @Component({
   selector: 'app-mail-configuration',
@@ -73,16 +74,42 @@ import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MailConfigurationComponent {
+  private mailConfigService = inject(MailConfigService);
+  
+  config = this.mailConfigService.config;
+
   mailForm = new FormGroup({
-    email: new FormControl('test@thamizhi.dev'),
-    host: new FormControl('thamizhi.dev'),
-    port: new FormControl(465),
-    hostUser: new FormControl('test@thamizhi.dev'),
-    hostPassword: new FormControl('fXt;1Jr,7*ft'),
-    useSsl: new FormControl(true)
+    email: new FormControl(''),
+    host: new FormControl(''),
+    port: new FormControl<number | null>(null),
+    hostUser: new FormControl(''),
+    hostPassword: new FormControl(''),
+    useSsl: new FormControl(false)
   });
 
-  onSubmit() {
-    console.log(this.mailForm.value);
+  constructor() {
+    effect(() => {
+      const configData = this.config();
+      if (configData) {
+        this.mailForm.patchValue({
+          ...configData,
+          // Don't patch password for security, it should be a write-only field
+          hostPassword: '' 
+        });
+      }
+    });
+  }
+
+  async onSubmit(): Promise<void> {
+    if (this.mailForm.invalid) return;
+
+    try {
+      await this.mailConfigService.updateConfig(this.mailForm.getRawValue() as MailConfiguration);
+      // Maybe show a success message
+      console.log('Mail configuration updated successfully.');
+    } catch (error) {
+      console.error('Failed to update mail configuration:', error);
+      // Maybe show an error message
+    }
   }
 }

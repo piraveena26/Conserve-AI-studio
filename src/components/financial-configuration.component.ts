@@ -1,15 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface DivisionTaxSetting {
-  id: number;
-  name: string;
-  code: string;
-  taxType: 'VAT' | 'GST';
-  taxPercentage: number;
-  status: 'Active' | 'Inactive';
-}
+import { FinancialConfigService, DivisionTaxSetting } from '../services/financial-config.service';
 
 @Component({
   selector: 'app-financial-configuration',
@@ -157,16 +149,13 @@ interface DivisionTaxSetting {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancialConfigurationComponent {
-  taxSettings = signal<DivisionTaxSetting[]>([
-    { id: 1, name: 'Engineering', code: 'ENG', taxType: 'VAT', taxPercentage: 15, status: 'Active' },
-    { id: 2, name: 'Consulting', code: 'CON', taxType: 'GST', taxPercentage: 18, status: 'Active' },
-    { id: 3, name: 'Support', code: 'SUP', taxType: 'VAT', taxPercentage: 15, status: 'Inactive' },
-  ]);
+  private financialConfigService = inject(FinancialConfigService);
+
+  taxSettings = this.financialConfigService.taxSettings;
   
   editingSetting = signal<DivisionTaxSetting | null>(null);
   settingToDelete = signal<DivisionTaxSetting | null>(null);
   searchTerm = signal('');
-  private nextId = signal(4);
 
   taxForm = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -179,7 +168,7 @@ export class FinancialConfigurationComponent {
     return this.taxSettings().filter(s => s.name.toLowerCase().includes(term));
   });
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.taxForm.invalid) {
       return;
     }
@@ -188,25 +177,31 @@ export class FinancialConfigurationComponent {
     const currentSetting = this.editingSetting();
     const divisionName = formValue.name!;
 
-    if (currentSetting) {
-      // Update
-      this.taxSettings.update(settings => settings.map(s => 
-        s.id === currentSetting.id ? { ...currentSetting, ...formValue, name: divisionName, code: divisionName.substring(0, 3).toUpperCase() } as DivisionTaxSetting : s
-      ));
-    } else {
-      // Add
-      const newSetting: DivisionTaxSetting = {
-        id: this.nextId(),
-        name: divisionName,
-        code: divisionName.substring(0, 3).toUpperCase(),
-        taxType: formValue.taxType!,
-        taxPercentage: formValue.taxPercentage!,
-        status: 'Active'
-      };
-      this.taxSettings.update(settings => [...settings, newSetting]);
-      this.nextId.update(id => id + 1);
+    try {
+        if (currentSetting) {
+          // Update
+          const updatedSetting: DivisionTaxSetting = { 
+              ...currentSetting, 
+              ...formValue, 
+              name: divisionName, 
+              code: divisionName.substring(0, 3).toUpperCase() 
+          } as DivisionTaxSetting;
+          await this.financialConfigService.updateTaxSetting(updatedSetting);
+        } else {
+          // Add
+          const newSetting = {
+            name: divisionName,
+            taxType: formValue.taxType!,
+            taxPercentage: formValue.taxPercentage!,
+          };
+          await this.financialConfigService.addTaxSetting(newSetting);
+        }
+    } catch (error) {
+        console.error('Failed to save tax setting:', error);
+        // Here you could show an error message to the user
+    } finally {
+        this.cancelEdit();
     }
-    this.cancelEdit();
   }
 
   editSetting(setting: DivisionTaxSetting): void {
@@ -231,15 +226,17 @@ export class FinancialConfigurationComponent {
     this.settingToDelete.set(null);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const setting = this.settingToDelete();
     if (setting) {
-      this.deleteSetting(setting.id);
-      this.cancelDelete();
+      try {
+        await this.financialConfigService.deleteTaxSetting(setting.id);
+      } catch (error) {
+        console.error('Failed to delete tax setting:', error);
+        // Here you could show an error to the user
+      } finally {
+        this.cancelDelete();
+      }
     }
-  }
-  
-  private deleteSetting(id: number): void {
-    this.taxSettings.update(settings => settings.filter(s => s.id !== id));
   }
 }

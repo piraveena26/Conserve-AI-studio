@@ -1,66 +1,75 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 import { MainAccount, SubAccount, IncomeEntry, ExpenseEntry, TransferEntry, InhouseEntry, Bank } from '../models/account.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DaybookService {
+  private http = inject(HttpClient);
 
   // --- STATE ---
-  private _cashInHand = signal(1850);
-  private _cashInBank = signal(14300);
+  private _cashInHand = signal(0);
+  private _cashInBank = signal(0);
   
-  private _allMainAccounts = signal<MainAccount[]>([
-    { id: 1, name: 'Office Supplies', type: 'Expense' },
-    { id: 2, name: 'Salaries', type: 'Expense' },
-    { id: 3, name: 'Software Subscriptions', type: 'Expense' },
-    { id: 4, name: 'Product Sales', type: 'Income' },
-    { id: 5, name: 'Service Revenue', type: 'Income' },
-    { id: 6, name: 'Internal Transfers', type: 'In-house' },
-    { id: 7, name: 'Asset Depreciation', type: 'In-house' }
-  ]);
+  private _allMainAccounts = signal<MainAccount[]>([]);
+  private _allSubAccounts = signal<SubAccount[]>([]);
+  private _incomeEntries = signal<IncomeEntry[]>([]);
+  private _expenseEntries = signal<ExpenseEntry[]>([]);
+  private _transferEntries = signal<TransferEntry[]>([]);
+  private _inhouseEntries = signal<InhouseEntry[]>([]);
+  private _divisions = signal<string[]>([]);
+  private _modes = signal<string[]>([]);
+  private _banks = signal<Bank[]>([]);
 
-  private _allSubAccounts = signal<SubAccount[]>([
-    { id: 1, name: 'Domestic Sales', mainAccountId: 4 },
-    { id: 2, name: 'International Sales', mainAccountId: 4 },
-    { id: 3, name: 'Consulting Fees', mainAccountId: 5 },
-    { id: 4, name: 'Stationery', mainAccountId: 1 },
-    { id: 5, name: 'Computer Peripherals', mainAccountId: 1 },
-    { id: 6, name: 'Widget A Sales', mainAccountId: 4 },
-    { id: 7, name: 'Paper and Pens', mainAccountId: 1 },
-  ]);
+  constructor() {
+    this.loadInitialData();
+  }
 
-  private _incomeEntries = signal<IncomeEntry[]>([
-    { id: 1, entryDate: '2025-12-10', mainAccount: 'Product Sales', subAccount: 'Domestic Sales', division: 'ENGINEERING', description: 'Sale of Product A', mode: 'Bank Transfer', amount: 5000, type: 'Credit', bank: 'HDFC Bank' },
-    { id: 2, entryDate: '2025-12-11', mainAccount: 'Service Revenue', subAccount: 'Consulting Fees', division: 'BIM', description: 'Consulting services for Project X', mode: 'Cash', amount: 1500, type: 'Credit' }
-  ]);
-  private _nextIncomeId = signal(3);
-  
-  private _expenseEntries = signal<ExpenseEntry[]>([
-    { id: 1, entryDate: '2025-12-10', mainAccount: 'Office Supplies', subAccount: 'Stationery', division: 'ENGINEERING', description: 'Purchase of pens and notebooks', mode: 'Cash', amount: 150, type: 'Debit' },
-    { id: 2, entryDate: '2025-12-12', mainAccount: 'Software Subscriptions', division: 'BIM', description: 'Annual license for CAD software', mode: 'Bank Transfer', amount: 1200, type: 'Debit', bank: 'State Bank of India' }
-  ]);
-  private _nextExpenseId = signal(3);
+  private async loadInitialData(): Promise<void> {
+    try {
+      // Use Promise.all to fetch data in parallel
+      const [
+        summary,
+        mainAccounts,
+        subAccounts,
+        income,
+        expense,
+        transfer,
+        inhouse,
+        divisions,
+        modes,
+        banks
+      ] = await Promise.all([
+        lastValueFrom(this.http.get<{ cashInHand: number, cashInBank: number }>('/api/daybook/summary')),
+        lastValueFrom(this.http.get<MainAccount[]>('/api/accounts/main')),
+        lastValueFrom(this.http.get<SubAccount[]>('/api/accounts/sub')),
+        lastValueFrom(this.http.get<IncomeEntry[]>('/api/daybook/income')),
+        lastValueFrom(this.http.get<ExpenseEntry[]>('/api/daybook/expense')),
+        lastValueFrom(this.http.get<TransferEntry[]>('/api/daybook/transfer')),
+        lastValueFrom(this.http.get<InhouseEntry[]>('/api/daybook/inhouse')),
+        lastValueFrom(this.http.get<string[]>('/api/daybook/divisions')),
+        lastValueFrom(this.http.get<string[]>('/api/daybook/modes')),
+        lastValueFrom(this.http.get<Bank[]>('/api/banks'))
+      ]);
+      
+      this._cashInHand.set(summary.cashInHand);
+      this._cashInBank.set(summary.cashInBank);
+      this._allMainAccounts.set(mainAccounts);
+      this._allSubAccounts.set(subAccounts);
+      this._incomeEntries.set(income);
+      this._expenseEntries.set(expense);
+      this._transferEntries.set(transfer);
+      this._inhouseEntries.set(inhouse);
+      this._divisions.set(divisions);
+      this._modes.set(modes);
+      this._banks.set(banks);
 
-  private _transferEntries = signal<TransferEntry[]>([
-    { id: 1, entryDate: '2025-12-11', amount: 500, bank: 'HDFC Bank', type: 'Cash to Bank' }
-  ]);
-  private _nextTransferId = signal(2);
-
-  private _inhouseEntries = signal<InhouseEntry[]>([
-    { id: 1, entryDate: '2025-12-12', mainAccount: 'Internal Transfers', description: 'Moving funds for operational use', mode: 'Internal', credit: 1000, debit: 1000 }
-  ]);
-  private _nextInhouseId = signal(2);
-
-  private _divisions = signal(['ENGINEERING', 'BIM', 'LASER', 'SIMULATION & ANALYSIS']);
-  private _modes = signal(['Cash', 'Bank Transfer', 'Cheque']);
-  
-  private _banks = signal<Bank[]>([
-    { id: 1, name: 'HDFC Bank', code: 'HDFC000123', accountNumber: '50100123456789', branch: 'Main Branch' },
-    { id: 2, name: 'ICICI Bank', code: 'ICIC000456', accountNumber: '000401567890', branch: 'Corporate' },
-    { id: 3, name: 'State Bank of India', code: 'SBIN000789', accountNumber: '20012345678', branch: 'City Center' },
-  ]);
-  private _nextBankId = signal(4);
+    } catch (error) {
+      console.error("Failed to load initial daybook data", error);
+    }
+  }
 
   // --- PUBLIC READONLY SIGNALS ---
   public readonly cashInHand = this._cashInHand.asReadonly();
@@ -83,234 +92,90 @@ export class DaybookService {
   
 
   // --- INCOME METHODS ---
-  addIncomeEntry(formValue: any): void {
-    const newEntry: IncomeEntry = {
-      id: this._nextIncomeId(),
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      division: formValue.division!,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      amount: formValue.amount!,
-      type: 'Credit',
-      bank: formValue.bank,
-    };
-    this._incomeEntries.update(entries => [...entries, newEntry]);
-    this._nextIncomeId.update(id => id + 1);
-    
-    if (newEntry.mode === 'Cash') this._cashInHand.update(v => v + newEntry.amount);
-    else this._cashInBank.update(v => v + newEntry.amount);
+  async addIncomeEntry(formValue: any): Promise<void> {
+    const newEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.post('/api/daybook/income', newEntry));
+    await this.loadInitialData(); // A simple way to refresh all data
   }
 
-  updateIncomeEntry(id: number, formValue: any): void {
-    const oldEntry = this.incomeEntries().find(e => e.id === id);
-    if (!oldEntry) return;
-
-    // Revert old transaction
-    if (oldEntry.mode === 'Cash') this._cashInHand.update(v => v - oldEntry.amount);
-    else this._cashInBank.update(v => v - oldEntry.amount);
-
-    const updatedEntry: IncomeEntry = {
-      ...oldEntry,
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      division: formValue.division!,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      amount: formValue.amount!,
-      bank: formValue.bank,
-    };
-    this._incomeEntries.update(entries => entries.map(e => e.id === id ? updatedEntry : e));
-
-    // Apply new transaction
-    if (updatedEntry.mode === 'Cash') this._cashInHand.update(v => v + updatedEntry.amount);
-    else this._cashInBank.update(v => v + updatedEntry.amount);
+  async updateIncomeEntry(id: number, formValue: any): Promise<void> {
+    const updatedEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.put(`/api/daybook/income/${id}`, updatedEntry));
+    await this.loadInitialData();
   }
 
-  deleteIncomeEntry(id: number): void {
-    const entryToDelete = this.incomeEntries().find(e => e.id === id);
-    if(entryToDelete) {
-      if(entryToDelete.mode === 'Cash') this._cashInHand.update(v => v - entryToDelete.amount);
-      else this._cashInBank.update(v => v - entryToDelete.amount);
-      this._incomeEntries.update(entries => entries.filter(e => e.id !== id));
-    }
+  async deleteIncomeEntry(id: number): Promise<void> {
+    await lastValueFrom(this.http.delete(`/api/daybook/income/${id}`));
+    await this.loadInitialData();
   }
 
   // --- EXPENSE METHODS ---
-  addExpenseEntry(formValue: any): void {
-    const newEntry: ExpenseEntry = {
-      id: this._nextExpenseId(),
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      division: formValue.division!,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      amount: formValue.amount!,
-      type: 'Debit',
-      bank: formValue.bank,
-    };
-    this._expenseEntries.update(entries => [...entries, newEntry]);
-    this._nextExpenseId.update(id => id + 1);
-
-    if (newEntry.mode === 'Cash') this._cashInHand.update(v => v - newEntry.amount);
-    else this._cashInBank.update(v => v - newEntry.amount);
+  async addExpenseEntry(formValue: any): Promise<void> {
+    const newEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.post('/api/daybook/expense', newEntry));
+    await this.loadInitialData();
   }
 
-  updateExpenseEntry(id: number, formValue: any): void {
-    const oldEntry = this.expenseEntries().find(e => e.id === id);
-    if (!oldEntry) return;
-
-    if (oldEntry.mode === 'Cash') this._cashInHand.update(v => v + oldEntry.amount);
-    else this._cashInBank.update(v => v + oldEntry.amount);
-
-    const updatedEntry: ExpenseEntry = {
-      ...oldEntry,
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      division: formValue.division!,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      amount: formValue.amount!,
-      bank: formValue.bank,
-    };
-    this._expenseEntries.update(entries => entries.map(e => e.id === id ? updatedEntry : e));
-
-    if (updatedEntry.mode === 'Cash') this._cashInHand.update(v => v - updatedEntry.amount);
-    else this._cashInBank.update(v => v - updatedEntry.amount);
+  async updateExpenseEntry(id: number, formValue: any): Promise<void> {
+    const updatedEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.put(`/api/daybook/expense/${id}`, updatedEntry));
+    await this.loadInitialData();
   }
 
-  deleteExpenseEntry(id: number): void {
-    const entryToDelete = this.expenseEntries().find(e => e.id === id);
-    if(entryToDelete) {
-      if(entryToDelete.mode === 'Cash') this._cashInHand.update(v => v + entryToDelete.amount);
-      else this._cashInBank.update(v => v + entryToDelete.amount);
-      this._expenseEntries.update(entries => entries.filter(e => e.id !== id));
-    }
+  async deleteExpenseEntry(id: number): Promise<void> {
+    await lastValueFrom(this.http.delete(`/api/daybook/expense/${id}`));
+    await this.loadInitialData();
   }
 
   // --- TRANSFER METHODS ---
-  addTransferEntry(formValue: any): void {
-    const newEntry: TransferEntry = {
-      id: this._nextTransferId(),
-      entryDate: formValue.entryDate!,
-      bank: formValue.bank!,
-      amount: formValue.amount!,
-      type: formValue.transferType!.type
-    };
-    this._transferEntries.update(entries => [...entries, newEntry]);
-    this._nextTransferId.update(id => id + 1);
-
-    if (newEntry.type === 'Cash to Bank') {
-      this._cashInHand.update(v => v - newEntry.amount);
-      this._cashInBank.update(v => v + newEntry.amount);
-    } else {
-      this._cashInHand.update(v => v + newEntry.amount);
-      this._cashInBank.update(v => v - newEntry.amount);
-    }
+  async addTransferEntry(formValue: any): Promise<void> {
+    const newEntry = { ...formValue, transferType: formValue.transferType?.type };
+    await lastValueFrom(this.http.post('/api/daybook/transfer', newEntry));
+    await this.loadInitialData();
   }
 
-  updateTransferEntry(id: number, formValue: any): void {
-    const oldEntry = this.transferEntries().find(e => e.id === id);
-    if (!oldEntry) return;
-
-    if (oldEntry.type === 'Cash to Bank') {
-      this._cashInHand.update(v => v + oldEntry.amount);
-      this._cashInBank.update(v => v - oldEntry.amount);
-    } else {
-      this._cashInHand.update(v => v - oldEntry.amount);
-      this._cashInBank.update(v => v + oldEntry.amount);
-    }
-
-    const updatedEntry: TransferEntry = {
-      ...oldEntry,
-      entryDate: formValue.entryDate!,
-      bank: formValue.bank!,
-      amount: formValue.amount!,
-      type: formValue.transferType!.type
-    };
-    this._transferEntries.update(entries => entries.map(e => e.id === id ? updatedEntry : e));
-
-    if (updatedEntry.type === 'Cash to Bank') {
-      this._cashInHand.update(v => v - updatedEntry.amount);
-      this._cashInBank.update(v => v + updatedEntry.amount);
-    } else {
-      this._cashInHand.update(v => v + updatedEntry.amount);
-      this._cashInBank.update(v => v - updatedEntry.amount);
-    }
+  async updateTransferEntry(id: number, formValue: any): Promise<void> {
+    const updatedEntry = { ...formValue, transferType: formValue.transferType?.type };
+    await lastValueFrom(this.http.put(`/api/daybook/transfer/${id}`, updatedEntry));
+    await this.loadInitialData();
   }
 
-  deleteTransferEntry(id: number): void {
-    const entryToDelete = this.transferEntries().find(e => e.id === id);
-    if(entryToDelete) {
-      if (entryToDelete.type === 'Cash to Bank') {
-        this._cashInHand.update(v => v + entryToDelete.amount);
-        this._cashInBank.update(v => v - entryToDelete.amount);
-      } else {
-        this._cashInHand.update(v => v - entryToDelete.amount);
-        this._cashInBank.update(v => v + entryToDelete.amount);
-      }
-      this._transferEntries.update(entries => entries.filter(e => e.id !== id));
-    }
+  async deleteTransferEntry(id: number): Promise<void> {
+    await lastValueFrom(this.http.delete(`/api/daybook/transfer/${id}`));
+    await this.loadInitialData();
   }
 
   // --- IN-HOUSE METHODS ---
-  addInhouseEntry(formValue: any): void {
-    const newEntry: InhouseEntry = {
-      id: this._nextInhouseId(),
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      credit: formValue.credit!,
-      debit: formValue.debit!
-    };
-    this._inhouseEntries.update(entries => [...entries, newEntry]);
-    this._nextInhouseId.update(id => id + 1);
+  async addInhouseEntry(formValue: any): Promise<void> {
+    const newEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.post('/api/daybook/inhouse', newEntry));
+    await this.loadInitialData();
   }
 
-  updateInhouseEntry(id: number, formValue: any): void {
-    const oldEntry = this.inhouseEntries().find(e => e.id === id);
-    if (!oldEntry) return;
-
-    const updatedEntry: InhouseEntry = {
-      ...oldEntry,
-      entryDate: formValue.entryDate!,
-      mainAccount: formValue.mainAccount!.name,
-      subAccount: formValue.subAccount?.name,
-      description: formValue.description!,
-      mode: formValue.mode!,
-      credit: formValue.credit!,
-      debit: formValue.debit!
-    };
-    this._inhouseEntries.update(entries => entries.map(e => e.id === id ? updatedEntry : e));
+  async updateInhouseEntry(id: number, formValue: any): Promise<void> {
+    const updatedEntry = { ...formValue, mainAccount: formValue.mainAccount?.name, subAccount: formValue.subAccount?.name };
+    await lastValueFrom(this.http.put(`/api/daybook/inhouse/${id}`, updatedEntry));
+    await this.loadInitialData();
   }
 
-  deleteInhouseEntry(id: number): void {
-    this._inhouseEntries.update(entries => entries.filter(e => e.id !== id));
+  async deleteInhouseEntry(id: number): Promise<void> {
+    await lastValueFrom(this.http.delete(`/api/daybook/inhouse/${id}`));
+    await this.loadInitialData();
   }
 
   // --- BANK METHODS ---
-  addBank(bankData: Omit<Bank, 'id'>): void {
-    const newBank: Bank = {
-      ...bankData,
-      id: this._nextBankId(),
-    };
-    this._banks.update(banks => [...banks, newBank]);
-    this._nextBankId.update(id => id + 1);
+  async addBank(bankData: Omit<Bank, 'id'>): Promise<void> {
+    await lastValueFrom(this.http.post<Bank>('/api/banks', bankData));
+    await this.loadInitialData();
   }
 
-  updateBank(updatedBank: Bank): void {
-    this._banks.update(banks => 
-      banks.map(b => b.id === updatedBank.id ? updatedBank : b)
-    );
+  async updateBank(updatedBank: Bank): Promise<void> {
+    await lastValueFrom(this.http.put<Bank>(`/api/banks/${updatedBank.id}`, updatedBank));
+    await this.loadInitialData();
   }
 
-  deleteBank(bankId: number): void {
-    this._banks.update(banks => banks.filter(b => b.id !== bankId));
+  async deleteBank(bankId: number): Promise<void> {
+    await lastValueFrom(this.http.delete(`/api/banks/${bankId}`));
+    await this.loadInitialData();
   }
 }

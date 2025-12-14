@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MainAccount } from './accounts.component';
+import { MainAccount } from '../services/account.service';
 
 @Component({
   selector: 'app-all-accounts',

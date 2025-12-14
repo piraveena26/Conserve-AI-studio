@@ -4,22 +4,12 @@ import { MainAccountComponent } from './main-account.component';
 import { AllAccountsComponent } from './all-accounts.component';
 import { SubAccountComponent } from './sub-account.component';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { AccountService, MainAccount, SubAccount } from '../services/account.service';
+
+// FIX: Re-export types to solve circular dependency with child components.
+export type { MainAccount, SubAccount } from '../services/account.service';
 
 type AccountTab = 'main' | 'all' | 'sub';
-
-export interface MainAccount {
-  id: number;
-  name: string;
-  type: 'Expense' | 'Income' | 'In-house';
-}
-
-export interface SubAccount {
-  id: number;
-  mainAccount: string;
-  name: string;
-  type: 'Expense' | 'Income' | 'In-house';
-}
-
 
 @Component({
   selector: 'app-accounts',
@@ -183,34 +173,20 @@ export interface SubAccount {
   ],
 })
 export class AccountsComponent {
+  private accountService = inject(AccountService);
+  private fb = inject(FormBuilder);
+
   activeTab = signal<AccountTab>('all');
   showAddMainAccountModal = signal(false);
   showAddSubAccountModal = signal(false);
   editingMainAccount = signal<MainAccount | null>(null);
   editingSubAccount = signal<SubAccount | null>(null);
-
   selectedSubAccountType = signal<string | null | undefined>(null);
 
   accountTypes: Array<MainAccount['type']> = ['Expense', 'Income', 'In-house'];
   
-  mainAccounts = signal<MainAccount[]>([
-    { id: 1, name: 'Office Supplies', type: 'Expense' },
-    { id: 2, name: 'Salaries', type: 'Expense' },
-    { id: 3, name: 'Software Subscriptions', type: 'Expense' },
-    { id: 4, name: 'Product Sales', type: 'Income' },
-    { id: 5, name: 'Service Revenue', type: 'Income' },
-    { id: 6, name: 'Internal Transfers', type: 'In-house' },
-    { id: 7, name: 'Asset Depreciation', type: 'In-house' }
-  ]);
-  private nextMainAccountId = signal(this.mainAccounts().length + 1);
-
-  subAccounts = signal<SubAccount[]>([
-    { id: 1, mainAccount: 'Office Supplies', name: 'Paper and Pens', type: 'Expense' },
-    { id: 2, mainAccount: 'Product Sales', name: 'Widget A Sales', type: 'Income' },
-  ]);
-  private nextSubAccountId = signal(this.subAccounts().length + 1);
-  
-  private fb = inject(FormBuilder);
+  mainAccounts = this.accountService.mainAccounts;
+  subAccounts = this.accountService.subAccounts;
   
   addMainAccountForm = this.fb.group({
     accountName: ['', Validators.required],
@@ -236,7 +212,6 @@ export class AccountsComponent {
     this.addSubAccountForm.get('accountType')?.valueChanges.subscribe(type => {
       this.selectedSubAccountType.set(type);
       const mainAccountControl = this.addSubAccountForm.get('mainAccount');
-      // Only reset if not editing
       if (!this.editingSubAccount()) {
         mainAccountControl?.reset('');
       }
@@ -272,26 +247,27 @@ export class AccountsComponent {
     this.editingMainAccount.set(null);
   }
 
-  onAddMainAccountSubmit(): void {
+  async onAddMainAccountSubmit(): Promise<void> {
     if (this.addMainAccountForm.invalid) return;
 
     const formValue = this.addMainAccountForm.getRawValue();
     const editing = this.editingMainAccount();
 
-    if (editing) {
-      this.mainAccounts.update(accounts =>
-        accounts.map(acc =>
-          acc.id === editing.id ? { ...acc, name: formValue.accountName!, type: formValue.type! as MainAccount['type'] } : acc
-        )
-      );
-    } else {
-      const newAccount: MainAccount = {
-        id: this.nextMainAccountId(),
-        name: formValue.accountName!,
-        type: formValue.type! as MainAccount['type'],
-      };
-      this.mainAccounts.update(accounts => [...accounts, newAccount]);
-      this.nextMainAccountId.update(id => id + 1);
+    try {
+      if (editing) {
+        await this.accountService.updateMainAccount({
+          id: editing.id,
+          name: formValue.accountName!,
+          type: formValue.type! as MainAccount['type']
+        });
+      } else {
+        await this.accountService.addMainAccount({
+          name: formValue.accountName!,
+          type: formValue.type! as MainAccount['type'],
+        });
+      }
+    } catch (error) {
+      console.error('Failed to save main account', error);
     }
     this.closeAddMainAccountModal();
   }
@@ -310,27 +286,29 @@ export class AccountsComponent {
     this.selectedSubAccountType.set(null);
   }
 
-  onAddSubAccountSubmit(): void {
+  async onAddSubAccountSubmit(): Promise<void> {
     if (this.addSubAccountForm.invalid) return;
     
     const formValue = this.addSubAccountForm.getRawValue();
     const editing = this.editingSubAccount();
     
-    if (editing) {
-      this.subAccounts.update(accounts => 
-        accounts.map(acc => 
-          acc.id === editing.id ? { ...acc, type: formValue.accountType! as SubAccount['type'], mainAccount: formValue.mainAccount!, name: formValue.subAccountName! } : acc
-        )
-      );
-    } else {
-      const newAccount: SubAccount = {
-        id: this.nextSubAccountId(),
-        type: formValue.accountType! as SubAccount['type'],
-        mainAccount: formValue.mainAccount!,
-        name: formValue.subAccountName!,
-      };
-      this.subAccounts.update(accounts => [...accounts, newAccount]);
-      this.nextSubAccountId.update(id => id + 1);
+    try {
+        if (editing) {
+          await this.accountService.updateSubAccount({
+            id: editing.id,
+            type: formValue.accountType! as SubAccount['type'],
+            mainAccount: formValue.mainAccount!,
+            name: formValue.subAccountName!,
+          });
+        } else {
+          await this.accountService.addSubAccount({
+            type: formValue.accountType! as SubAccount['type'],
+            mainAccount: formValue.mainAccount!,
+            name: formValue.subAccountName!,
+          });
+        }
+    } catch (error) {
+        console.error('Failed to save sub account', error);
     }
     
     this.closeAddSubAccountModal();
@@ -348,7 +326,6 @@ export class AccountsComponent {
   handleEditSubAccount(account: SubAccount): void {
     this.editingSubAccount.set(account);
     this.selectedSubAccountType.set(account.type);
-    // Enable control before setting value to avoid issues
     this.addSubAccountForm.get('mainAccount')?.enable();
     this.addSubAccountForm.setValue({
       accountType: account.type,
