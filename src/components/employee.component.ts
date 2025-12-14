@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, signal, computed, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray, FormBuilder } from '@angular/forms';
@@ -436,7 +437,107 @@ import { UserRequestService } from '../services/user-request.service';
                   </form>
                 </div>
               }
-              @case ('identification') { <h4>Identification (Placeholder)</h4> }
+              @case ('identification') {
+                <div class="p-4 bg-white rounded-lg">
+                  <h3 class="text-lg font-semibold text-slate-800 mb-6">Identification Details</h3>
+                  <form [formGroup]="identificationForm" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                      <!-- Aadhar & PAN -->
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">Aadhar Number</label>
+                        <input formControlName="aadharNumber" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">PAN Number</label>
+                        <input formControlName="panNumber" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">Aadhar Copy</label>
+                        <button type="button" class="mt-1 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                          <svg class="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                          Upload Aadhar File
+                        </button>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">PAN Copy</label>
+                        <button type="button" class="mt-1 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                           <svg class="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                          Upload Pan File
+                        </button>
+                      </div>
+
+                      <!-- Driving License -->
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">Driving License Number</label>
+                        <input formControlName="drivingLicenseNumber" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                      </div>
+                      <div class="relative">
+                        <label class="block text-sm font-medium text-slate-700">License Valid Up To</label>
+                        <input type="date" formControlName="licenseValidUpTo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2 pr-8">
+                        <div class="absolute inset-y-0 right-0 top-6 pr-3 flex items-center pointer-events-none"><svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg></div>
+                      </div>
+                      
+                      <!-- Passport -->
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">Passport Number</label>
+                        <input formControlName="passportNumber" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                      </div>
+                      <div class="relative">
+                        <label class="block text-sm font-medium text-slate-700">Passport Valid Up To</label>
+                        <input type="date" formControlName="passportValidUpTo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2 pr-8">
+                        <div class="absolute inset-y-0 right-0 top-6 pr-3 flex items-center pointer-events-none"><svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg></div>
+                      </div>
+
+                      <!-- File Uploads -->
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">Passport Copy</label>
+                        <button type="button" class="mt-1 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                           <svg class="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                          Upload Passport File
+                        </button>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-slate-700">License Copy</label>
+                        <button type="button" class="mt-1 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                           <svg class="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                          Upload License File
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Visa Information -->
+                    <div class="pt-8 border-t border-slate-200">
+                      <h3 class="text-lg font-semibold text-slate-800 mb-6">Visa Information</h3>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700">Visa Type</label>
+                          <input formControlName="visaType" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700">Visa Number</label>
+                          <input formControlName="visaNumber" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div class="relative">
+                          <label class="block text-sm font-medium text-slate-700">Visa Valid Up To</label>
+                          <input type="date" formControlName="visaValidUpTo" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2 pr-8">
+                           <div class="absolute inset-y-0 right-0 top-6 pr-3 flex items-center pointer-events-none"><svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg></div>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700">Sponsor</label>
+                          <input formControlName="sponsor" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm p-2">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700">Visa Image</label>
+                          <button type="button" class="mt-1 flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">
+                             <svg class="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                            Upload Visa File
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              }
               @case ('compensation') {
                 <div class="p-4 bg-white rounded-lg">
                   <h3 class="text-lg font-semibold text-slate-800 mb-6">Compensation Details</h3>
@@ -566,13 +667,7 @@ export class EmployeeComponent {
   employees = this.employeeService.employees;
   currentUser = this.userService.currentUser;
 
-  displayedEmployees = computed(() => {
-    const currentEmployeeId = this.currentUser()?.employeeId;
-    if (!currentEmployeeId) {
-      return this.employees();
-    }
-    return this.employees().filter(e => e.id !== currentEmployeeId);
-  });
+  displayedEmployees = this.employees;
 
   userEmployeeIds = computed(() => new Set(this.userService.users().map(u => u.employeeId)));
   pendingInviteIds = computed(() => new Set(this.userRequestService.requests().map(r => r.id)));
@@ -608,6 +703,7 @@ export class EmployeeComponent {
   educationForm: FormGroup;
   experienceForm: FormGroup;
   referencesForm: FormGroup;
+  identificationForm: FormGroup;
   compensationForm: FormGroup;
   bankDetailsForm: FormGroup;
 
@@ -647,6 +743,18 @@ export class EmployeeComponent {
     this.educationForm = this.fb.group({ educations: this.fb.array([]) });
     this.experienceForm = this.fb.group({ experiences: this.fb.array([]) });
     this.referencesForm = this.fb.group({ references: this.fb.array([]) });
+    this.identificationForm = this.fb.group({
+      aadharNumber: [''],
+      panNumber: [''],
+      drivingLicenseNumber: [''],
+      licenseValidUpTo: [''],
+      passportNumber: [''],
+      passportValidUpTo: [''],
+      visaType: [''],
+      visaNumber: [''],
+      visaValidUpTo: [''],
+      sponsor: ['']
+    });
     this.compensationForm = this.fb.group({
       basicSalary: [0, Validators.required],
       hra: [0, Validators.required],
@@ -743,6 +851,7 @@ export class EmployeeComponent {
       employee.references.forEach(ref => this.referencesArray.push(this.createReferenceGroup(ref)));
     } else { this.addReference(); }
 
+    this.identificationForm.patchValue(employee.identification);
     this.compensationForm.patchValue(employee.compensation);
     this.bankDetailsForm.patchValue(employee.bankDetails);
 
@@ -776,30 +885,87 @@ export class EmployeeComponent {
   }
 
   onUpdateSubmit() {
-    console.log('Basic Info:', this.basicInfoForm.value);
-    console.log('Skills:', this.skillsForm.value);
-    console.log('Personal Details:', this.personalDetailsForm.value);
-    console.log('Education:', this.educationForm.value);
-    console.log('Experience:', this.experienceForm.value);
-    console.log('References:', this.referencesForm.value);
-    console.log('Compensation:', this.compensationForm.value);
-    console.log('Bank Details:', this.bankDetailsForm.value);
+    const editing = this.editingEmployee();
+    if (!editing) return;
 
-    // Add other forms to the validation check
-    if(this.basicInfoForm.valid && this.skillsForm.valid && this.personalDetailsForm.valid && 
-       this.educationForm.valid && this.experienceForm.valid && this.referencesForm.valid && 
-       this.compensationForm.valid && this.bankDetailsForm.valid) {
-        this.closeEditModal();
-    } else {
+    if (this.basicInfoForm.invalid || this.skillsForm.invalid || this.personalDetailsForm.invalid || 
+       this.educationForm.invalid || this.experienceForm.invalid || this.referencesForm.invalid || 
+       this.identificationForm.invalid || this.compensationForm.invalid || this.bankDetailsForm.invalid) {
+        
         this.basicInfoForm.markAllAsTouched();
         this.skillsForm.markAllAsTouched();
         this.personalDetailsForm.markAllAsTouched();
         this.educationForm.markAllAsTouched();
         this.experienceForm.markAllAsTouched();
         this.referencesForm.markAllAsTouched();
+        this.identificationForm.markAllAsTouched();
         this.compensationForm.markAllAsTouched();
         this.bankDetailsForm.markAllAsTouched();
+        console.error('One or more forms are invalid.');
+        return;
     }
+
+    const basicInfo = this.basicInfoForm.getRawValue();
+    const skills = this.skillsForm.getRawValue();
+    const personalDetails = this.personalDetailsForm.getRawValue();
+    const education = this.educationForm.getRawValue();
+    const experience = this.experienceForm.getRawValue();
+    const references = this.referencesForm.getRawValue();
+    const identification = this.identificationForm.getRawValue();
+    const compensation = this.compensationForm.getRawValue();
+    const bankDetails = this.bankDetailsForm.getRawValue();
+
+    const updatedEmployee: Employee = {
+      ...editing, // Preserve fields not in forms, like avatar and organization
+      name: `${basicInfo.firstName} ${basicInfo.lastName}`,
+      firstName: basicInfo.firstName,
+      lastName: basicInfo.lastName,
+      employeeId: basicInfo.employeeId,
+      orgDateOfJoining: basicInfo.organizationDOJ,
+      ksaEmploymentJoining: basicInfo.ksaDOJ,
+      department: basicInfo.department,
+      designation: basicInfo.designation,
+      reportingTo: basicInfo.reportingTo,
+      category: basicInfo.category,
+      gender: basicInfo.gender,
+      countryCode: basicInfo.countryCode,
+      phoneNumber: basicInfo.phoneNumber,
+      alternateContact: basicInfo.alternateContact,
+      email: basicInfo.officialEmail,
+      personalEmail: basicInfo.personalEmail,
+      nationality: basicInfo.nationality,
+      employmentType: basicInfo.employmentType,
+      status: basicInfo.employeeStatus,
+      
+      skills: Object.values(skills).filter(s => s),
+
+      personalDetails: {
+        ...editing.personalDetails,
+        dateOfBirth: basicInfo.dobCertificate,
+        dobOriginal: basicInfo.dobOriginal,
+        maritalStatus: basicInfo.maritalStatus,
+        fatherOrSpouseName: personalDetails.fatherOrSpouseName,
+        bloodGroup: personalDetails.bloodGroup,
+        residentialAddress: personalDetails.residentialAddress,
+        permanentAddress: personalDetails.permanentAddress,
+        emergencyContactNumber: personalDetails.emergencyContactNumber,
+        relation: personalDetails.relation,
+        contactNumber: personalDetails.contactNumber,
+      },
+
+      education: education.educations,
+      experience: experience.experiences,
+      references: references.references,
+      identification: identification,
+      compensation: compensation,
+      bankDetails: {
+        ...editing.bankDetails, // Preserve optional file fields
+        ...bankDetails,
+      }
+    };
+    
+    this.employeeService.updateEmployee(updatedEmployee);
+    this.closeEditModal();
   }
 
   createEducationGroup(edu?: Education): FormGroup {

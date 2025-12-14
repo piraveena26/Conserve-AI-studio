@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { SidebarComponent } from './components/sidebar.component';
@@ -48,6 +48,8 @@ import { PmsFormTemplateComponent } from './components/pms-form-template.compone
 import { PmsFormBuilderComponent } from './components/pms-form-builder.component';
 import { PmsFormResponsesComponent } from './components/pms-form-responses.component';
 import { ProposalComponent } from './components/proposal.component';
+import { LoginComponent } from './components/login.component';
+import { UserService } from './services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -104,19 +106,26 @@ import { ProposalComponent } from './components/proposal.component';
     PmsFormBuilderComponent,
     PmsFormResponsesComponent,
     ProposalComponent,
+    LoginComponent,
   ],
 })
 export class AppComponent {
+  private userService = inject(UserService);
+  
+  isLoggedIn = this.userService.isLoggedIn;
   activeView = signal<string>('dashboard');
   selectedEmployeeId = signal<string | null>(null);
   selectedInvoiceProjectId = signal<string | null>(null);
   selectedStatementId = signal<string | null>(null);
   statementViewMode = signal<'project' | 'client'>('project');
+  
+  currentUserEmployeeId = computed(() => this.userService.currentUser()?.employeeId);
 
   private readonly viewTitleMap: { [key: string]: string } = {
     dashboard: 'Dashboard',
     employee: 'Employee Management',
     'employee-360': 'Employee 360',
+    my_profile: 'My Profile',
     department: 'Department',
     designation: 'Designation',
     job_roles: 'Job Roles',
@@ -199,5 +208,9 @@ export class AppComponent {
     this.selectedStatementId.set(projectId);
     this.statementViewMode.set('client');
     this.activeView.set('statement_of_account_details');
+  }
+
+  handleLogout(): void {
+    this.userService.logout();
   }
 }

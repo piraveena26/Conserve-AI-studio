@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, output, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -7,7 +8,7 @@ import { CommonModule } from '@angular/common';
     <aside class="w-64 bg-white/70 backdrop-blur-xl text-gray-800 flex-shrink-0 flex flex-col border-r border-white/30">
       <div class="h-16 flex items-center justify-center px-4 border-b border-white/30">
         <div class="flex items-center">
-          <img src="https://i.imgur.com/v8L6k4H.png" alt="Conserve Logo" class="h-8">
+          <img src="https://img.logoipsum.com/243.svg" alt="Company Logo" class="h-8">
         </div>
       </div>
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

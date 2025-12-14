@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, input, output, computed, inject, signal, OnDestroy } from '@angular/core';
+
+import { Component, ChangeDetectionStrategy, input, output, computed, inject, signal, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../services/user.service';
 import { EmployeeService } from '../services/employee.service';
@@ -6,7 +7,7 @@ import { EmployeeService } from '../services/employee.service';
 @Component({
   selector: 'app-header',
   template: `
-    <header class="h-16 bg-white/70 backdrop-blur-xl shadow-sm flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+    <header class="relative z-10 h-16 bg-white/70 backdrop-blur-xl shadow-sm flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
       <div class="flex items-center space-x-2 text-sm text-gray-500">
         <button (click)="viewChanged.emit('dashboard')" class="hover:text-gray-800">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -56,29 +57,44 @@ import { EmployeeService } from '../services/employee.service';
           </svg>
         </button>
         
-        <!-- User Profile -->
+        <!-- User Profile Dropdown -->
         <div class="relative">
-          <button class="flex items-center space-x-2 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100">
+          <button #dropdownButton (click)="toggleDropdown()" class="flex items-center space-x-2 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100/80 transition-colors">
             <img class="h-9 w-9 rounded-full object-cover" [src]="currentUser()?.avatar" alt="User avatar">
             <div class="text-left hidden md:block">
               <div class="text-sm font-semibold text-gray-800">{{ currentUser()?.name }}</div>
               <div class="text-xs text-gray-500">{{ currentUserDesignation() }}</div>
             </div>
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 transition-transform" [class.rotate-180]="isDropdownOpen()" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
           </button>
+
+          @if (isDropdownOpen()) {
+            <div #dropdownMenu class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200/50 py-1 z-50">
+              <button (click)="onMyProfileClick()" class="w-full text-left block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Profile</button>
+              <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Settings</a>
+              <div class="border-t border-slate-100 my-1"></div>
+              <button (click)="onLogout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                Logout
+              </button>
+            </div>
+          }
         </div>
       </div>
     </header>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule]
+  imports: [CommonModule],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  }
 })
 export class HeaderComponent implements OnDestroy {
   title = input.required<string>();
   activeView = input.required<string>();
   viewChanged = output<string>();
+  logout = output<void>();
   
   private userService = inject(UserService);
   private employeeService = inject(EmployeeService);
@@ -87,6 +103,11 @@ export class HeaderComponent implements OnDestroy {
   isRunning = signal(false);
   startTime = signal<number | null>(null);
   elapsedTime = signal(0); // in seconds
+
+  isDropdownOpen = signal(false);
+
+  @ViewChild('dropdownButton') dropdownButton?: ElementRef;
+  @ViewChild('dropdownMenu') dropdownMenu?: ElementRef;
 
   formattedTime = computed(() => {
     const totalSeconds = this.elapsedTime();
@@ -144,4 +165,36 @@ export class HeaderComponent implements OnDestroy {
     }
     return title;
   });
+
+  toggleDropdown(): void {
+    this.isDropdownOpen.update(v => !v);
+  }
+
+  closeDropdown(): void {
+    this.isDropdownOpen.set(false);
+  }
+
+  onMyProfileClick(): void {
+    this.closeDropdown();
+    this.viewChanged.emit('my_profile');
+  }
+
+  onLogout(): void {
+    this.closeDropdown();
+    this.logout.emit();
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as Node;
+
+    // If the click is on the button that toggles the dropdown, let the (click) event binding handle it.
+    if (this.dropdownButton?.nativeElement.contains(target)) {
+      return;
+    }
+
+    // If the dropdown is open and the click is outside of the menu, close it.
+    if (this.isDropdownOpen() && this.dropdownMenu && !this.dropdownMenu.nativeElement.contains(target)) {
+      this.closeDropdown();
+    }
+  }
 }

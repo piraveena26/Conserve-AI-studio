@@ -1,3 +1,4 @@
+
 import { Injectable, signal, computed } from '@angular/core';
 
 export interface User {
@@ -20,8 +21,8 @@ export interface UserGroup {
 })
 export class UserService {
   private readonly _users = signal<User[]>([
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com', userGroup: 'System Administrators', status: 'Active', avatar: 'https://picsum.photos/id/1005/200/200', employeeId: 'EMP001' },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', userGroup: 'HR Managers', status: 'Active', avatar: 'https://picsum.photos/id/1011/200/200', employeeId: 'EMP002' },
+    { id: 1, name: 'Thavarasha Kunaraj', email: 'thava@conserve.com', userGroup: 'System Administrators', status: 'Active', avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?w=800&q=80', employeeId: 'EMP001' },
+    { id: 2, name: 'Venkatesh S', email: 'venkatesh.s@example.com', userGroup: 'HR Managers', status: 'Active', avatar: 'https://picsum.photos/id/1011/200/200', employeeId: 'EMP002' },
     { id: 3, name: 'Susan Wilson', email: 'susan.wilson@example.com', userGroup: 'Team Leads', status: 'Inactive', avatar: 'https://picsum.photos/id/1027/200/200', employeeId: 'EMP003' },
     { id: 4, name: 'External Auditor', email: 'auditor@ext.com', userGroup: 'Guest', status: 'Active', avatar: 'https://picsum.photos/id/1040/200/200' },
     { id: 5, name: 'Temp Contractor', email: 'contractor@temp.com', userGroup: 'Guest', status: 'Inactive', avatar: 'https://picsum.photos/id/1041/200/200' },
@@ -36,15 +37,30 @@ export class UserService {
       { id: 'ug6', name: 'Accounts' },
   ]);
 
-  // Hardcode the current user's ID for simulation purposes.
-  // In a real application, this would be set dynamically upon user login.
-  private readonly _currentUserId = signal<number>(1); // John Doe is logged in
-
+  private readonly _currentUserId = signal<number>(1);
   private _nextId = signal(7);
+  
+  // --- Authentication State ---
+  public readonly isLoggedIn = signal<boolean>(false);
 
   public readonly users = this._users.asReadonly();
   public readonly userGroups = this._userGroups.asReadonly();
   public readonly currentUser = computed(() => this._users().find(u => u.id === this._currentUserId()));
+
+  login(email: string, password: string): boolean {
+    // Mock login logic
+    const user = this._users().find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user && password === 'password') { // Using a simple hardcoded password
+      this._currentUserId.set(user.id);
+      this.isLoggedIn.set(true);
+      return true;
+    }
+    return false;
+  }
+
+  logout(): void {
+    this.isLoggedIn.set(false);
+  }
 
   addUser(user: Omit<User, 'id'>): void {
     const newUser: User = { ...user, id: this._nextId() };
