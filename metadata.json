@@ -1,0 +1,5 @@
+{
+  "name": "SaaS HR Management",
+  "description": "A comprehensive SaaS application for managing employees and users across multiple company branches. This app provides tools for employee information, departments, roles, user access, and more with a clean, minimal interface.",
+  "requestFramePermissions": []
+}

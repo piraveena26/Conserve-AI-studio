@@ -1,0 +1,140 @@
+<div class="flex h-full w-full text-slate-800 font-sans">
+  <app-sidebar [activeView]="activeView()" (viewChanged)="handleViewChange($event)"></app-sidebar>
+  
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <app-header [title]="currentTitle()" [activeView]="activeView()" (viewChanged)="handleViewChange($event)"></app-header>
+    
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      @if (activeView() === 'employee-360' && selectedEmployeeId(); as empId) {
+        <app-employee-360 [employeeId]="empId"></app-employee-360>
+      } @else if (activeView() === 'invoice_details' && selectedInvoiceProjectId(); as projectId) {
+        <app-invoice-details [projectId]="projectId"></app-invoice-details>
+      } @else if (activeView() === 'statement_of_account_details' && selectedStatementId(); as projectId) {
+        <app-statement-of-account-details [projectId]="projectId" [viewMode]="statementViewMode()"></app-statement-of-account-details>
+      } @else if (activeView().startsWith('reports_')) {
+        <app-reports-management [reportType]="activeView()"></app-reports-management>
+      }
+      @else {
+        @switch (activeView()) {
+          @case ('dashboard') {
+            <app-dashboard></app-dashboard>
+          }
+          @case ('employee') {
+            <app-employee (viewProfile)="showEmployeeProfile($event)"></app-employee>
+          }
+          @case ('department') {
+            <app-department></app-department>
+          }
+          @case ('designation') {
+            <app-designation></app-designation>
+          }
+          @case ('job_roles') {
+            <app-job-roles></app-job-roles>
+          }
+          @case ('shifts') {
+            <app-shifts></app-shifts>
+          }
+          @case ('users') {
+            <app-users></app-users>
+          }
+          @case ('user_requests') {
+            <app-user-requests></app-user-requests>
+          }
+          @case ('user_groups') {
+            <app-user-groups></app-user-groups>
+          }
+          @case ('guest_users') {
+            <app-guest-users></app-guest-users>
+          }
+          @case ('company_creation') {
+            <app-company-creation></app-company-creation>
+          }
+          @case ('location_creation') {
+            <app-location-creation></app-location-creation>
+          }
+          @case ('system_configuration') {
+            <app-system-configuration></app-system-configuration>
+          }
+          @case ('time_sheet') {
+            <app-time-sheet></app-time-sheet>
+          }
+          @case ('leave') {
+            <app-leave></app-leave>
+          }
+          @case ('attendance') {
+            <app-attendance></app-attendance>
+          }
+          @case ('holidays') {
+            <app-holidays></app-holidays>
+          }
+          @case ('work_allocation') {
+            <app-work-allocation></app-work-allocation>
+          }
+          @case ('project_enquiry') {
+            <app-enquiry></app-enquiry>
+          }
+          @case ('project_proposals') {
+            <app-proposal></app-proposal>
+          }
+          @case ('project_projects') {
+            <app-projects></app-projects>
+          }
+          @case ('invoice_milestone') {
+            <app-milestone-invoice (viewDetails)="showInvoiceDetails($event)"></app-milestone-invoice>
+          }
+          @case ('invoice_monthly') {
+            <app-monthly-invoice (viewDetails)="showInvoiceDetails($event)"></app-monthly-invoice>
+          }
+          @case ('invoice_prorata') {
+            <app-pro-rata-invoice (viewDetails)="showInvoiceDetails($event)"></app-pro-rata-invoice>
+          }
+          @case ('invoice_tracking') {
+            <app-invoice-tracking></app-invoice-tracking>
+          }
+          @case ('accounts_board') {
+            <app-accounts-board></app-accounts-board>
+          }
+          @case ('accounts_main') {
+            <app-accounts></app-accounts>
+          }
+          @case ('accounts_daybook') {
+            <app-daybook></app-daybook>
+          }
+          @case ('accounts_reports') {
+            <app-account-reports></app-account-reports>
+          }
+          @case ('accounts_bank') {
+            <app-bank></app-bank>
+          }
+          @case ('statement_of_account_main') {
+            <app-statement-of-account-main 
+              (viewProject)="showStatementProjectDetails($event)"
+              (viewClient)="showStatementClientDetails($event)">
+            </app-statement-of-account-main>
+          }
+          @case ('statement_of_account_all_clients') {
+            <app-statement-of-account-all-clients (viewClient)="showStatementClientDetails($event)"></app-statement-of-account-all-clients>
+          }
+          @case ('pms_periods') {
+            <app-pms-periods></app-pms-periods>
+          }
+          @case ('pms_goals') {
+            <app-pms-goals></app-pms-goals>
+          }
+          @case ('pms_metrics') {
+            <app-pms-metrics></app-pms-metrics>
+          }
+          @case ('pms_form_template') {
+            <app-pms-form-template></app-pms-form-template>
+          }
+          @default {
+            <div class="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-xl font-semibold">Welcome</h2>
+              <p class="text-gray-500 mt-2">Please select a section from the sidebar to begin.</p>
+            </div>
+          }
+        }
+      }
+    </div>
+  </main>
+</div>
