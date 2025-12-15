@@ -1,17 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface PmsMetric {
-  id: number;
-  metricType: string;
-  metric: string;
-  definition5star: number;
-  definition4star: number;
-  definition3star: number;
-  definition2star: number;
-  definition1star: number;
-}
+import { MetricService, Metric } from '../services/metric.service';
 
 @Component({
   selector: 'app-pms-metrics',
@@ -182,26 +172,16 @@ interface PmsMetric {
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class PmsMetricsComponent {
+  private metricService = inject(MetricService);
+
   showModal = signal(false);
-  editingMetric = signal<PmsMetric | null>(null);
-  metricToDelete = signal<PmsMetric | null>(null);
+  editingMetric = signal<Metric | null>(null);
+  metricToDelete = signal<Metric | null>(null);
   searchTerm = signal('');
   showColumnsDropdown = signal(false);
-  private nextId = signal(410);
 
-  metrics = signal<PmsMetric[]>([
-    {
-      id: 409,
-      metricType: 'Testing Metrics Type',
-      metric: 'Metrics',
-      definition5star: 5,
-      definition4star: 4,
-      definition3star: 3,
-      definition2star: 2,
-      definition1star: 1,
-    }
-  ]);
-  
+  metrics = this.metricService.metrics;
+
   metricForm = new FormGroup({
     metricType: new FormControl('', Validators.required),
     metric: new FormControl('', Validators.required),
@@ -219,17 +199,17 @@ export class PmsMetricsComponent {
     { id: 'actions', name: 'Actions' },
   ];
   visibleColumns = signal(new Set(this.allColumns.map(c => c.id)));
-  
+
   filteredMetrics = computed(() => {
     const term = this.searchTerm().toLowerCase();
     if (!term) return this.metrics();
-    return this.metrics().filter(m => 
+    return this.metrics().filter(m =>
       m.metricType.toLowerCase().includes(term) ||
       m.metric.toLowerCase().includes(term)
     );
   });
-  
-  openModal(metric: PmsMetric | null): void {
+
+  openModal(metric: Metric | null): void {
     if (metric) {
       this.editingMetric.set(metric);
       this.metricForm.setValue({
@@ -247,11 +227,11 @@ export class PmsMetricsComponent {
     }
     this.showModal.set(true);
   }
-  
+
   closeModal(): void {
     this.showModal.set(false);
   }
-  
+
   onSubmit(): void {
     if (this.metricForm.invalid) {
       return;
@@ -261,12 +241,8 @@ export class PmsMetricsComponent {
     const currentMetric = this.editingMetric();
 
     if (currentMetric) {
-      this.metrics.update(metrics =>
-        metrics.map(m => m.id === currentMetric.id ? { ...currentMetric, ...(formValue as any) } : m)
-      );
-    } else {
-      const newMetric: PmsMetric = {
-        id: this.nextId(),
+      this.metricService.updateMetric({
+        ...currentMetric,
         metricType: formValue.metricType!,
         metric: formValue.metric!,
         definition1star: formValue.definition1star!,
@@ -274,29 +250,37 @@ export class PmsMetricsComponent {
         definition3star: formValue.definition3star!,
         definition4star: formValue.definition4star!,
         definition5star: formValue.definition5star!,
-      };
-      this.metrics.update(metrics => [...metrics, newMetric]);
-      this.nextId.update(id => id + 1);
+      });
+    } else {
+      this.metricService.addMetric({
+        metricType: formValue.metricType!,
+        metric: formValue.metric!,
+        definition1star: formValue.definition1star!,
+        definition2star: formValue.definition2star!,
+        definition3star: formValue.definition3star!,
+        definition4star: formValue.definition4star!,
+        definition5star: formValue.definition5star!,
+      });
     }
     this.closeModal();
   }
-  
-  promptDelete(metric: PmsMetric): void {
+
+  promptDelete(metric: Metric): void {
     this.metricToDelete.set(metric);
   }
-  
+
   cancelDelete(): void {
     this.metricToDelete.set(null);
   }
-  
+
   confirmDelete(): void {
     const metric = this.metricToDelete();
     if (metric) {
-      this.metrics.update(metrics => metrics.filter(m => m.id !== metric.id));
+      this.metricService.deleteMetric(metric.id);
       this.cancelDelete();
     }
   }
-  
+
   toggleColumn(columnId: string): void {
     this.visibleColumns.update(cols => {
       const newCols = new Set(cols);

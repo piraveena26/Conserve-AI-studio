@@ -7,12 +7,14 @@ import jobRoleController from './controllers/jobRoleController.js';
 import shiftController from './controllers/shiftController.js';
 import employeeController from './controllers/employeeController.js';
 import periodController from './controllers/periodController.js';
+import metricController from './controllers/metricController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
 import shiftRoutes from './routes/shiftRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import periodRoutes from './routes/periodRoutes.js';
+import metricRoutes from './routes/metricRoutes.js';
 
 dotenv.config();
 
@@ -31,6 +33,7 @@ const initDB = async () => {
     await shiftController.createTable();
     await employeeController.createTable();
     await periodController.createTable();
+    await metricController.createTable();
 };
 initDB();
 
@@ -41,6 +44,7 @@ app.use('/api/job-roles', jobRoleRoutes);
 app.use('/api/shifts', shiftRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/periods', periodRoutes);
+app.use('/api/metrics', metricRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
