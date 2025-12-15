@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { Employee, EmployeeService } from '../services/employee.service';
 import { UserService } from '../services/user.service';
+import { TimesheetProjectService } from '../services/timesheet-project.service';
 
 // --- Interfaces for Data Structure ---
 interface TimeEntry {
@@ -466,8 +467,8 @@ interface TimesheetProject {
                       <td class="px-6 py-4">{{ project.id }}</td>
                       <td class="px-6 py-4 font-medium text-slate-900">{{ project.name }}</td>
                       <td class="px-6 py-4">{{ project.client }}</td>
-                      <td class="px-6 py-4">{{ project.startDate }}</td>
-                      <td class="px-6 py-4">{{ project.endDate }}</td>
+                      <td class="px-6 py-4">{{ project.startDate | date:'mediumDate' }}</td>
+                      <td class="px-6 py-4">{{ project.endDate | date:'mediumDate' }}</td>
                       <td class="px-6 py-4">{{ project.estimatedTime }}</td>
                       <td class="px-6 py-4">{{ project.status }}</td>
                       <td class="px-6 py-4">
@@ -577,6 +578,7 @@ interface TimesheetProject {
 export class TimeSheetComponent {
   private readonly employeeService = inject(EmployeeService);
   private readonly userService = inject(UserService);
+  private readonly timesheetProjectService = inject(TimesheetProjectService);
 
   // --- Constants ---
   private readonly CUSTOM_TASK: Task = { id: 'custom', name: 'Custom Task', projectId: '*' };
@@ -586,14 +588,14 @@ export class TimeSheetComponent {
   activeLogType = signal<'task' | 'activity'>('task');
   selectedDate = signal(this.formatDateForInput('2025-12-12'));
   myTimesheetsViewMode = signal<'card' | 'table'>('card');
-  
+
   // --- Data ---
   private nextRecordId = signal(2);
   reportingTo = signal('Venkatesh S');
   status = signal('PENDING');
-  
+
   taskLevels: TaskLevel[] = ['New Work', 'Rework (Internal)', 'Rework (Client)'];
-  
+
   allTasks = signal<Task[]>([
     { id: 't0', projectId: '1518', name: 'Perform UAT' },
     { id: 't1', projectId: '1516', name: 'Client meeting' },
@@ -604,7 +606,7 @@ export class TimeSheetComponent {
   ]);
 
   timesheetRecords = signal<TimesheetRecord[]>([]);
-  
+
   // --- Form ---
   recordForm = new FormGroup({
     project: new FormControl<Project | null>(null, Validators.required),
@@ -626,44 +628,44 @@ export class TimeSheetComponent {
     const taskForRecord = initialTasks.find(t => t.id === 't0');
 
     this.timesheetRecords.set([
-      { 
-        id: 1, 
-        date: '2025-12-12', 
-        logType: 'task', 
+      {
+        id: 1,
+        date: '2025-12-12',
+        logType: 'task',
         project: projectForRecord,
-        taskLevel: 'New Work', 
-        task: taskForRecord, 
-        timeEntries: [{startTime: '16:00', endTime: '19:30'}], 
-        totalMinutes: 210 
+        taskLevel: 'New Work',
+        task: taskForRecord,
+        timeEntries: [{ startTime: '16:00', endTime: '19:30' }],
+        totalMinutes: 210
       }
     ]);
-    
+
     this.updateFormValidators();
 
     this.recordForm.get('project')?.valueChanges.subscribe(() => {
-        this.recordForm.get('task')?.setValue(this.CUSTOM_TASK);
-        this.recordForm.get('customTaskName')?.reset();
+      this.recordForm.get('task')?.setValue(this.CUSTOM_TASK);
+      this.recordForm.get('customTaskName')?.reset();
     });
 
     effect(() => {
-        this.updateFormValidators();
+      this.updateFormValidators();
     });
   }
 
   // --- Computed Signals ---
   currentUser = this.userService.currentUser;
   currentUserEmployeeId = computed(() => this.currentUser()?.employeeId);
-  
+
   projects = computed(() => {
     const employeeId = this.currentUserEmployeeId();
     if (!employeeId) {
-        return [];
+      return [];
     }
     return this.timesheetProjects()
-        .filter(p => p.assignedTo.includes(employeeId))
-        .map(p => ({ id: p.id.toString(), name: p.name }));
+      .filter(p => p.assignedTo.includes(employeeId))
+      .map(p => ({ id: p.id.toString(), name: p.name }));
   });
-  
+
   recordsForSelectedDate = computed(() => this.timesheetRecords().filter(r => r.date === this.selectedDate()));
   totalMinutes = computed(() => this.recordsForSelectedDate().reduce((acc, curr) => acc + curr.totalMinutes, 0));
   totalHoursDisplay = computed(() => this.formatDuration(this.totalMinutes()));
@@ -684,7 +686,7 @@ export class TimeSheetComponent {
   recordsByDate = computed(() => {
     const records = this.timesheetRecords();
     const grouped = new Map<string, TimesheetRecord[]>();
-    
+
     const sortedRecords = [...records].sort((a, b) => {
       const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
       if (dateComparison !== 0) return dateComparison;
@@ -692,10 +694,10 @@ export class TimeSheetComponent {
     });
 
     for (const record of sortedRecords) {
-        if (!grouped.has(record.date)) {
-            grouped.set(record.date, []);
-        }
-        grouped.get(record.date)!.push(record);
+      if (!grouped.has(record.date)) {
+        grouped.set(record.date, []);
+      }
+      grouped.get(record.date)!.push(record);
     }
     return Array.from(grouped.entries()).map(([date, records]) => ({ date, records }));
   });
@@ -718,7 +720,7 @@ export class TimeSheetComponent {
       taskControl?.setValidators(Validators.required);
       activityControl?.clearValidators();
       activityControl?.setValue(null);
-      
+
       if (this.isCustomTaskSelected()) {
         customTaskNameControl?.setValidators(Validators.required);
       } else {
@@ -761,10 +763,10 @@ export class TimeSheetComponent {
 
     const formValue = this.recordForm.value;
     const totalMinutes = (formValue.timeEntries || []).reduce((acc, entry) => {
-        if (entry && entry.startTime && entry.endTime) {
-            return acc + this.calculateMinutes(entry.startTime, entry.endTime);
-        }
-        return acc;
+      if (entry && entry.startTime && entry.endTime) {
+        return acc + this.calculateMinutes(entry.startTime, entry.endTime);
+      }
+      return acc;
     }, 0);
 
     const newRecord: TimesheetRecord = {
@@ -782,11 +784,11 @@ export class TimeSheetComponent {
 
     this.timesheetRecords.update(records => [...records, newRecord]);
     this.nextRecordId.update(id => id + 1);
-    
+
     this.timeEntriesArray.clear();
     this.timeEntriesArray.push(new FormGroup({
-        startTime: new FormControl('09:00', Validators.required),
-        endTime: new FormControl('17:00', Validators.required)
+      startTime: new FormControl('09:00', Validators.required),
+      endTime: new FormControl('17:00', Validators.required)
     }));
     this.recordForm.reset({
       project: null,
@@ -798,7 +800,7 @@ export class TimeSheetComponent {
   deleteRecord(id: number) {
     this.timesheetRecords.update(records => records.filter(r => r.id !== id));
   }
-  
+
   setActiveTab(tab: 'timesheet' | 'myTimeSheets' | 'employeeTimeSheets' | 'projects') { this.activeTab.set(tab); }
   setLogType(type: 'task' | 'activity') { this.activeLogType.set(type); }
   onDateChange(event: Event) {
@@ -820,7 +822,7 @@ export class TimeSheetComponent {
     { id: 'status', name: 'Status' }, { id: 'actions', name: 'Actions' }
   ];
   visibleColumns = signal(new Set(this.allColumns.map(c => c.id)));
-  
+
   employeeTimesheetSubmissions = signal<EmployeeTimesheetSubmission[]>([
     { id: 853, employeeId: 'EMP005', employeeName: 'Thenu Kunam', startDate: '2025-12-12', endDate: '2025-12-12', approvalDate: null, submissionDate: '2025-12-12', totalHours: '9h 30m', comment: null, status: 'PENDING' },
     { id: 854, employeeId: 'EMP005', employeeName: 'Thenu Kunam', startDate: '2025-12-09', endDate: '2025-12-09', approvalDate: null, submissionDate: '2025-12-12', totalHours: '8h 30m', comment: null, status: 'PENDING' },
@@ -834,13 +836,13 @@ export class TimeSheetComponent {
   });
 
   totalPages = computed(() => Math.ceil(this.filteredEmployeeTimesheets().length / this.itemsPerPage()));
-  
+
   paginatedEmployeeTimesheets = computed(() => {
     const start = (this.currentPage() - 1) * this.itemsPerPage();
     const end = start + this.itemsPerPage();
     return this.filteredEmployeeTimesheets().slice(start, end);
   });
-  
+
   paginationSummary = computed(() => {
     const total = this.filteredEmployeeTimesheets().length;
     if (total === 0) return '0 of 0';
@@ -866,9 +868,9 @@ export class TimeSheetComponent {
       return newCols;
     });
   }
-  
+
   updateSubmissionStatus(id: number, status: 'APPROVED' | 'REJECTED'): void {
-    this.employeeTimesheetSubmissions.update(submissions => 
+    this.employeeTimesheetSubmissions.update(submissions =>
       submissions.map(s => s.id === id ? { ...s, status, approvalDate: this.formatDateForInput(new Date()) } : s)
     );
   }
@@ -882,23 +884,14 @@ export class TimeSheetComponent {
   }
 
   // --- Projects for Timesheet Logic ---
-  private nextProjectId = signal(1527);
   showProjectModal = signal(false);
   editingProject = signal<TimesheetProject | null>(null);
   allEmployeesForProjects = computed(() => this.employeeService.employees().map(e => ({ id: e.id, name: e.name })));
   projectSearchTerm = signal('');
   projectCurrentPage = signal(1);
   projectItemsPerPage = signal(10);
-  
-  timesheetProjects = signal<TimesheetProject[]>([
-      { id: 1526, name: 'Call Center Create', client: 'empty', startDate: '2025-12-26', endDate: '2025-12-26', estimatedTime: '0', status: 'Commercially Open', description: 'Setup for new call center.', assignedTo: ['EMP002', 'EMP003'] },
-      { id: 1523, name: 'Al Corniche Hotel - Jeddah', client: 'empty', startDate: '2025-12-05', endDate: '2025-12-11', estimatedTime: '0', status: 'Commercially Open', description: 'On-site support project.', assignedTo: ['EMP004'] },
-      { id: 1518, name: 'testing Timesheet', client: 'tj', startDate: '2025-12-10', endDate: '2025-12-31', estimatedTime: '21 days, 0:00:00', status: 'On Hold', description: 'Internal timesheet system testing.', assignedTo: ['EMP001'] },
-      { id: 1517, name: 'Call Center', client: 'empty', startDate: '2025-12-09', endDate: '2026-01-31', estimatedTime: '0', status: 'Commercially Open', description: 'General call center operations.', assignedTo: ['EMP002', 'EMP003'] },
-      { id: 1516, name: "ARAMCO - JU'AYMAH Project", client: 'empty', startDate: '2025-12-01', endDate: '2025-12-31', estimatedTime: '0', status: 'Commercially Open', description: 'Major client project.', assignedTo: ['EMP001', 'EMP004'] },
-      { id: 1515, name: 'project360 test', client: 'tj', startDate: '2025-12-09', endDate: '2025-12-11', estimatedTime: '2 days, 0:00:00', status: 'On Hold', description: 'Another internal testing project.', assignedTo: ['EMP001', 'EMP003'] },
-      { id: 1514, name: 'new pro088', client: 'Surya', startDate: '2025-12-08', endDate: '2025-12-31', estimatedTime: '23 days, 0:00:00', status: 'On Hold', description: 'Project for Surya client.', assignedTo: ['EMP002'] },
-  ]);
+
+  timesheetProjects = this.timesheetProjectService.projects;
 
   projectForm = new FormGroup({
     projectName: new FormControl('', Validators.required),
@@ -916,7 +909,7 @@ export class TimeSheetComponent {
   });
 
   projectTotalPages = computed(() => Math.ceil(this.filteredTimesheetProjects().length / this.projectItemsPerPage()));
-  
+
   paginatedTimesheetProjects = computed(() => {
     const start = (this.projectCurrentPage() - 1) * this.projectItemsPerPage();
     const end = start + this.projectItemsPerPage();
@@ -980,14 +973,9 @@ export class TimeSheetComponent {
 
     const currentProject = this.editingProject();
     if (currentProject) {
-      this.timesheetProjects.update(projects => projects.map(p => p.id === currentProject.id ? { ...currentProject, ...projectData } : p));
+      this.timesheetProjectService.updateProject({ ...currentProject, ...projectData });
     } else {
-      const newProject: TimesheetProject = {
-        id: this.nextProjectId(),
-        ...projectData,
-      };
-      this.timesheetProjects.update(projects => [newProject, ...projects]);
-      this.nextProjectId.update(id => id + 1);
+      this.timesheetProjectService.addProject(projectData);
     }
     this.closeProjectModal();
   }
@@ -998,18 +986,18 @@ export class TimeSheetComponent {
     const endDate = new Date(end);
     if (startDate > endDate) return '0';
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return `${diffDays} days, 0:00:00`;
   }
-  
+
   // --- Template Helpers ---
   getTabClass(tabName: string) {
     const base = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
-    return this.activeTab() === tabName 
+    return this.activeTab() === tabName
       ? `${base} border-indigo-500 text-indigo-600`
       : `${base} border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300`;
   }
-  
+
   getRecordTitle(record: TimesheetRecord): string {
     if (record.logType === 'task') {
       const taskName = record.task?.id === this.CUSTOM_TASK.id
@@ -1041,11 +1029,11 @@ export class TimeSheetComponent {
   }
 
   private formatDateForInput(date: string | Date): string {
-      const d = new Date(date);
-      const year = d.getFullYear();
-      const month = ('0' + (d.getMonth() + 1)).slice(-2);
-      const day = ('0' + d.getDate()).slice(-2);
-      return `${year}-${month}-${day}`;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
   }
 
   formatTime(timeString: string): string {

@@ -10,6 +10,7 @@ import periodController from './controllers/periodController.js';
 import metricController from './controllers/metricController.js';
 import goalController from './controllers/goalController.js';
 import financialConfigController from './controllers/financialConfigController.js';
+import timesheetProjectController from './controllers/timesheetProjectController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
@@ -19,6 +20,7 @@ import periodRoutes from './routes/periodRoutes.js';
 import metricRoutes from './routes/metricRoutes.js';
 import goalRoutes from './routes/goalRoutes.js';
 import financialConfigRoutes from './routes/financialConfigRoutes.js';
+import timesheetProjectRoutes from './routes/timesheetProjectRoutes.js';
 
 dotenv.config();
 
@@ -40,6 +42,7 @@ const initDB = async () => {
     await metricController.createTable();
     await goalController.createTable();
     await financialConfigController.createTaxSettingsTable();
+    await timesheetProjectController.createTable();
 };
 initDB();
 
@@ -53,6 +56,7 @@ app.use('/api/periods', periodRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/financial-config', financialConfigRoutes);
+app.use('/api/timesheet-projects', timesheetProjectRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
