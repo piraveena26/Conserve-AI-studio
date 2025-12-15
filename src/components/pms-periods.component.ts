@@ -1,13 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
+import { PeriodService, Period as PmsPeriod } from '../services/period.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface PmsPeriod {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-}
 
 @Component({
   selector: 'app-pms-periods',
@@ -149,18 +143,16 @@ interface PmsPeriod {
   imports: [CommonModule, ReactiveFormsModule, DatePipe],
 })
 export class PmsPeriodsComponent {
+  private periodService = inject(PeriodService);
+
   showModal = signal(false);
   editingPeriod = signal<PmsPeriod | null>(null);
   periodToDelete = signal<PmsPeriod | null>(null);
   searchTerm = signal('');
   showColumnsDropdown = signal(false);
-  private nextId = signal(4);
 
-  periods = signal<PmsPeriod[]>([
-    { id: 1, name: 'Q1 2025 Performance Review', startDate: '2025-01-01', endDate: '2025-03-31' },
-    { id: 2, name: 'Q2 2025 Performance Review', startDate: '2025-04-01', endDate: '2025-06-30' },
-    { id: 3, name: 'Annual Review 2024', startDate: '2024-01-01', endDate: '2024-12-31' },
-  ]);
+  // Expose service's periods signal
+  periods = this.periodService.periods;
 
   periodForm = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -188,7 +180,7 @@ export class PmsPeriodsComponent {
       this.editingPeriod.set(period);
       this.periodForm.setValue({
         name: period.name,
-        startDate: period.startDate,
+        startDate: period.startDate, // Backend now ensures YYYY-MM-DD
         endDate: period.endDate,
       });
     } else {
@@ -211,18 +203,18 @@ export class PmsPeriodsComponent {
     const currentPeriod = this.editingPeriod();
 
     if (currentPeriod) {
-      this.periods.update(periods =>
-        periods.map(p => p.id === currentPeriod.id ? { ...currentPeriod, ...formValue } : p)
-      );
-    } else {
-      const newPeriod: PmsPeriod = {
-        id: this.nextId(),
+      this.periodService.updatePeriod({
+        ...currentPeriod,
         name: formValue.name!,
         startDate: formValue.startDate!,
-        endDate: formValue.endDate!,
-      };
-      this.periods.update(periods => [...periods, newPeriod]);
-      this.nextId.update(id => id + 1);
+        endDate: formValue.endDate!
+      });
+    } else {
+      this.periodService.addPeriod({
+        name: formValue.name!,
+        startDate: formValue.startDate!,
+        endDate: formValue.endDate!
+      });
     }
     this.closeModal();
   }
@@ -238,7 +230,7 @@ export class PmsPeriodsComponent {
   confirmDelete(): void {
     const period = this.periodToDelete();
     if (period) {
-      this.periods.update(periods => periods.filter(p => p.id !== period.id));
+      this.periodService.deletePeriod(period.id);
       this.cancelDelete();
     }
   }
