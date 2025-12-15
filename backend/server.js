@@ -5,10 +5,12 @@ import departmentController from './controllers/departmentController.js';
 import designationController from './controllers/designationController.js';
 import jobRoleController from './controllers/jobRoleController.js';
 import shiftController from './controllers/shiftController.js';
+import employeeController from './controllers/employeeController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
 import shiftRoutes from './routes/shiftRoutes.js';
+import employeeRoutes from './routes/employeeRoutes.js';
 
 dotenv.config();
 
@@ -25,6 +27,7 @@ const initDB = async () => {
     await designationController.createTable();
     await jobRoleController.createTable();
     await shiftController.createTable();
+    await employeeController.createTable();
 };
 initDB();
 
@@ -33,6 +36,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/designations', designationRoutes);
 app.use('/api/job-roles', jobRoleRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

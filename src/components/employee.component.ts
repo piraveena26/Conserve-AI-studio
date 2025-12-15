@@ -147,7 +147,7 @@ import { UserRequestService } from '../services/user-request.service';
                  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div><label for="add-department" class="block text-sm font-medium text-slate-700 mb-1">Department</label><select id="add-department" formControlName="department" class="form-select w-full rounded-md border-slate-300 p-2.5 bg-white">@for(d of departments(); track d){<option [value]="d">{{d}}</option>}</select></div>
                     <div><label for="add-designation" class="block text-sm font-medium text-slate-700 mb-1">Designation*</label><select id="add-designation" formControlName="designation" class="form-select w-full rounded-md border-slate-300 p-2.5 bg-white">@for(d of designations(); track d){<option [value]="d">{{d}}</option>}</select></div>
-                    <div><label for="add-reportingTo" class="block text-sm font-medium text-slate-700 mb-1">Reporting To*</label><select id="add-reportingTo" formControlName="reportingTo" class="form-select w-full rounded-md border-slate-300 p-2.5 bg-white">@for(m of allReportingManagers(); track m.id){<option [value]="m.id">{{m.name}}</option>}</select></div>
+                    <div><label for="add-reportingTo" class="block text-sm font-medium text-slate-700 mb-1">Reporting To</label><select id="add-reportingTo" formControlName="reportingTo" class="form-select w-full rounded-md border-slate-300 p-2.5 bg-white">@for(m of allReportingManagers(); track m.id){<option [value]="m.id">{{m.name}}</option>}</select></div>
                     <div><label for="add-category" class="block text-sm font-medium text-slate-700 mb-1">Categorized</label><select id="add-category" formControlName="category" class="form-select w-full rounded-md border-slate-300 p-2.5 bg-white">@for(c of categories(); track c){<option [value]="c">{{c}}</option>}</select></div>
                 </div>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -717,7 +717,7 @@ export class EmployeeComponent {
       ksaDOJ: [''],
       department: ['', Validators.required],
       designation: ['', Validators.required],
-      reportingTo: ['', Validators.required],
+      reportingTo: [''],
       category: [''],
       countryCode: ['+91', Validators.required],
       phoneNumber: ['', Validators.required],
@@ -728,10 +728,10 @@ export class EmployeeComponent {
     });
     this.basicInfoForm = this.fb.group({
       firstName: ['', Validators.required], lastName: ['', Validators.required], employeeId: ['', Validators.required],
-      organizationDOJ: ['', Validators.required], ksaDOJ: ['', Validators.required], department: ['', Validators.required],
-      designation: ['', Validators.required], reportingTo: [''], category: ['', Validators.required],
-      gender: ['', Validators.required], dobCertificate: ['', Validators.required], dobOriginal: ['', Validators.required],
-      maritalStatus: ['', Validators.required], countryCode: ['+91'], phoneNumber: [''], alternateContact: [''],
+      organizationDOJ: ['', Validators.required], ksaDOJ: [''], department: ['', Validators.required],
+      designation: ['', Validators.required], reportingTo: [''], category: [''],
+      gender: [''], dobCertificate: [''], dobOriginal: [''],
+      maritalStatus: [''], countryCode: ['+91'], phoneNumber: [''], alternateContact: [''],
       officialEmail: ['', [Validators.required, Validators.email]], personalEmail: ['', [Validators.email]],
       nationality: [''], employmentType: ['', Validators.required], employeeStatus: ['Active' as Employee['status'], Validators.required],
     });
@@ -821,8 +821,8 @@ export class EmployeeComponent {
       firstName: employee.firstName, lastName: employee.lastName, employeeId: employee.employeeId,
       organizationDOJ: employee.orgDateOfJoining, ksaDOJ: employee.ksaEmploymentJoining, department: employee.department,
       designation: employee.designation, reportingTo: employee.reportingTo, category: employee.category,
-      gender: employee.gender, dobCertificate: employee.personalDetails.dateOfBirth, dobOriginal: employee.personalDetails.dobOriginal,
-      maritalStatus: employee.personalDetails.maritalStatus, countryCode: employee.countryCode, phoneNumber: employee.phoneNumber,
+      gender: employee.gender, dobCertificate: employee.personalDetails?.dateOfBirth, dobOriginal: employee.personalDetails?.dobOriginal,
+      maritalStatus: employee.personalDetails?.maritalStatus, countryCode: employee.countryCode, phoneNumber: employee.phoneNumber,
       alternateContact: employee.alternateContact, officialEmail: employee.email, personalEmail: employee.personalEmail,
       nationality: employee.nationality, employmentType: employee.employmentType, employeeStatus: employee.status,
     });
@@ -830,30 +830,30 @@ export class EmployeeComponent {
     this.skillsForm.patchValue({ skill1: employee.skills?.[0] || '', skill2: employee.skills?.[1] || '', skill3: employee.skills?.[2] || '' });
 
     this.personalDetailsForm.patchValue({
-      fatherOrSpouseName: employee.personalDetails.fatherOrSpouseName, bloodGroup: employee.personalDetails.bloodGroup,
-      residentialAddress: employee.personalDetails.residentialAddress, permanentAddress: employee.personalDetails.permanentAddress,
-      emergencyContactNumber: employee.personalDetails.emergencyContactNumber, relation: employee.personalDetails.relation,
-      contactNumber: employee.personalDetails.contactNumber,
+      fatherOrSpouseName: employee.personalDetails?.fatherOrSpouseName, bloodGroup: employee.personalDetails?.bloodGroup,
+      residentialAddress: employee.personalDetails?.residentialAddress, permanentAddress: employee.personalDetails?.permanentAddress,
+      emergencyContactNumber: employee.personalDetails?.emergencyContactNumber, relation: employee.personalDetails?.relation,
+      contactNumber: employee.personalDetails?.contactNumber,
     });
 
     this.educationsArray.clear();
     if (employee.education?.length > 0) {
       employee.education.forEach(edu => this.educationsArray.push(this.createEducationGroup(edu)));
-    } else { this.addEducation(); }
+    }
 
     this.experiencesArray.clear();
     if (employee.experience?.length > 0) {
       employee.experience.forEach(exp => this.experiencesArray.push(this.createExperienceGroup(exp)));
-    } else { this.addExperience(); }
+    }
 
     this.referencesArray.clear();
     if (employee.references?.length > 0) {
       employee.references.forEach(ref => this.referencesArray.push(this.createReferenceGroup(ref)));
-    } else { this.addReference(); }
+    }
 
-    this.identificationForm.patchValue(employee.identification);
-    this.compensationForm.patchValue(employee.compensation);
-    this.bankDetailsForm.patchValue(employee.bankDetails);
+    this.identificationForm.patchValue(employee.identification || {});
+    this.compensationForm.patchValue(employee.compensation || {});
+    this.bankDetailsForm.patchValue(employee.bankDetails || {});
 
     this.showEditModal.set(true);
   }
@@ -901,6 +901,31 @@ export class EmployeeComponent {
       this.identificationForm.markAllAsTouched();
       this.compensationForm.markAllAsTouched();
       this.bankDetailsForm.markAllAsTouched();
+
+      const forms = {
+        'Basic Info': this.basicInfoForm,
+        'Skills': this.skillsForm,
+        'Personal Details': this.personalDetailsForm,
+        'Education': this.educationForm,
+        'Experience': this.experienceForm,
+        'References': this.referencesForm,
+        'Identification': this.identificationForm,
+        'Compensation': this.compensationForm,
+        'Bank Details': this.bankDetailsForm
+      };
+
+      for (const [name, form] of Object.entries(forms)) {
+        if (form.invalid) {
+          console.error(`${name} Form is invalid.`);
+          Object.keys((form as FormGroup).controls).forEach(key => {
+            const control = (form as FormGroup).get(key);
+            if (control && control.invalid) {
+              console.error(`- Field '${key}' is invalid:`, control.errors);
+            }
+          });
+        }
+      }
+
       console.error('One or more forms are invalid.');
       return;
     }
