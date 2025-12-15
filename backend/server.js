@@ -9,6 +9,7 @@ import employeeController from './controllers/employeeController.js';
 import periodController from './controllers/periodController.js';
 import metricController from './controllers/metricController.js';
 import goalController from './controllers/goalController.js';
+import financialConfigController from './controllers/financialConfigController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
@@ -17,6 +18,7 @@ import employeeRoutes from './routes/employeeRoutes.js';
 import periodRoutes from './routes/periodRoutes.js';
 import metricRoutes from './routes/metricRoutes.js';
 import goalRoutes from './routes/goalRoutes.js';
+import financialConfigRoutes from './routes/financialConfigRoutes.js';
 
 dotenv.config();
 
@@ -37,6 +39,7 @@ const initDB = async () => {
     await periodController.createTable();
     await metricController.createTable();
     await goalController.createTable();
+    await financialConfigController.createTaxSettingsTable();
 };
 initDB();
 
@@ -49,6 +52,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/periods', periodRoutes);
 app.use('/api/metrics', metricRoutes);
 app.use('/api/goals', goalRoutes);
+app.use('/api/financial-config', financialConfigRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
