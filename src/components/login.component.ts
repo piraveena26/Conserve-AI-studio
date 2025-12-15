@@ -25,7 +25,7 @@ import { UserService } from '../services/user.service';
         <!-- Form Panel -->
         <div class="w-full lg:w-1/2 p-8 text-slate-800 flex flex-col justify-center">
             <div class="text-center mb-8">
-                <img src="https://img.logoipsum.com/243.svg" alt="Company Logo" class="h-10 mx-auto">
+                <img src="https://placehold.co/150x50?text=Logo" alt="Company Logo" class="h-10 mx-auto">
                 <h2 class="text-3xl font-bold text-slate-900 mt-6">Welcome Back</h2>
                 <p class="text-slate-600 mt-2">Sign in to continue to your dashboard.</p>
             </div>
@@ -121,7 +121,7 @@ export class LoginComponent {
       this.errorMessage.set('Please enter a valid email and password.');
       return;
     }
-    
+
     const { email, password } = this.loginForm.getRawValue();
 
     const success = this.userService.login(email!, password!);

@@ -19,7 +19,13 @@ const createTable = async () => {
 const getAll = async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM shifts ORDER BY id ASC');
-        res.json(result.rows);
+        const shifts = result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            startTime: row.start_time,
+            endTime: row.end_time
+        }));
+        res.json(shifts);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

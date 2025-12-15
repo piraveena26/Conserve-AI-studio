@@ -8,6 +8,16 @@ import { Shift, ShiftService } from '../services/shift.service';
   selector: 'app-shifts',
   standalone: true,
   template: `
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-slate-800">Shifts</h2>
+      <button (click)="openModal(null)" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        Add Shift
+      </button>
+    </div>
+
     <div class="overflow-x-auto">
       <table class="w-full text-sm text-left text-slate-500">
         <thead class="text-xs text-slate-700 uppercase bg-slate-50">
@@ -181,9 +191,9 @@ export class ShiftsComponent {
     if (shift) {
       this.editingShift.set(shift);
       this.shiftForm.setValue({
-        name: shift.name,
-        startTime: shift.startTime,
-        endTime: shift.endTime
+        name: shift.name || '',
+        startTime: shift.startTime || '',
+        endTime: shift.endTime || ''
       });
     } else {
       this.editingShift.set(null);

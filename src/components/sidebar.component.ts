@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
     <aside class="w-64 bg-white/70 backdrop-blur-xl text-gray-800 flex-shrink-0 flex flex-col border-r border-white/30">
       <div class="h-16 flex items-center justify-center px-4 border-b border-white/30">
         <div class="flex items-center">
-          <img src="https://img.logoipsum.com/243.svg" alt="Company Logo" class="h-8">
+          <img src="https://placehold.co/150x50?text=Logo" alt="Company Logo" class="h-8">
         </div>
       </div>
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -276,16 +276,16 @@ export class SidebarComponent {
       return newMenus;
     });
   }
-  
+
   changeView(view: string, event: Event): void {
     event.preventDefault();
     this.viewChanged.emit(view);
   }
-  
+
   getButtonClass(viewPrefix: string): string {
     const baseClasses = 'w-full flex items-center justify-between text-left text-sm font-medium text-gray-600 hover:bg-black/5 p-2.5 rounded-lg transition-all duration-200 transform';
     if (this.activeView().startsWith(viewPrefix)) {
-        return `${baseClasses} bg-black/5 font-semibold text-gray-800`;
+      return `${baseClasses} bg-black/5 font-semibold text-gray-800`;
     }
     return `${baseClasses} hover:translate-x-1`;
   }
