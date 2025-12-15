@@ -1,13 +1,8 @@
-
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface Designation {
-  id: number;
-  name: string; // Job Title
-  department: string;
-}
+import { Designation, DesignationService } from '../services/designation.service';
+import { DepartmentService } from '../services/department.service';
 
 @Component({
   selector: 'app-designation',
@@ -82,8 +77,8 @@ interface Designation {
                 <label for="department" class="block text-sm font-medium text-slate-700">Department</label>
                 <select id="department" formControlName="department" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3">
                   <option value="" disabled>Select a department</option>
-                  @for (department of departments(); track department) {
-                    <option [value]="department">{{ department }}</option>
+                  @for (department of departments(); track department.id) {
+                    <option [value]="department.name">{{ department.name }}</option>
                   }
                 </select>
               </div>
@@ -144,22 +139,15 @@ interface Designation {
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class DesignationComponent {
+  private designationService = inject(DesignationService);
+  private departmentService = inject(DepartmentService);
+
   showModal = signal(false);
   editingDesignation = signal<Designation | null>(null);
   designationToDelete = signal<Designation | null>(null);
 
-  // Mock data, in a real app this would likely come from a service
-  departments = signal<string[]>(['Technology', 'Product', 'Design', 'Human Resources', 'Marketing', 'Analytics']);
-
-  designations = signal<Designation[]>([
-    { id: 1, name: 'Software Engineer', department: 'Technology' },
-    { id: 2, name: 'Product Manager', department: 'Product' },
-    { id: 3, name: 'UX Designer', department: 'Design' },
-    { id: 4, name: 'Data Scientist', department: 'Analytics' },
-    { id: 5, name: 'HR Manager', department: 'Human Resources' }
-  ]);
-
-  private nextId = signal(6);
+  designations = this.designationService.designations;
+  departments = this.departmentService.departments;
 
   designationForm = new FormGroup({
     department: new FormControl('', Validators.required),
@@ -182,30 +170,28 @@ export class DesignationComponent {
     this.editingDesignation.set(null);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.designationForm.invalid) {
       return;
     }
 
-    const formValue = this.designationForm.getRawValue();
+    // Use safe access or non-null assertion
+    const formValue = {
+      name: this.designationForm.value.name!,
+      department: this.designationForm.value.department!
+    };
     const currentDesignation = this.editingDesignation();
 
-    if (currentDesignation) {
-      // Edit mode
-      this.designations.update(desgs =>
-        desgs.map(d => d.id === currentDesignation.id ? { ...d, name: formValue.name!, department: formValue.department! } : d)
-      );
-    } else {
-      // Add mode
-      const newDesignation: Designation = {
-        id: this.nextId(),
-        name: formValue.name!,
-        department: formValue.department!,
-      };
-      this.designations.update(desgs => [...desgs, newDesignation]);
-      this.nextId.update(id => id + 1);
+    try {
+      if (currentDesignation) {
+        await this.designationService.updateDesignation({ id: currentDesignation.id, ...formValue });
+      } else {
+        await this.designationService.addDesignation(formValue);
+      }
+      this.closeModal();
+    } catch (e) {
+      console.error(e);
     }
-    this.closeModal();
   }
 
   promptDelete(designation: Designation): void {
@@ -216,11 +202,15 @@ export class DesignationComponent {
     this.designationToDelete.set(null);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const designation = this.designationToDelete();
     if (designation) {
-      this.designations.update(desgs => desgs.filter(d => d.id !== designation.id));
-      this.cancelDelete();
+      try {
+        await this.designationService.deleteDesignation(designation.id);
+        this.cancelDelete();
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 }
