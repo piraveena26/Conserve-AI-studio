@@ -3,7 +3,8 @@ import { Component, ChangeDetectionStrategy, input, output, computed, inject, si
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { UserService } from '../services/user.service';
-import { EmployeeService, ShiftService, AttendanceService, Shift } from '../services/employee.service';
+import { EmployeeService, AttendanceService } from '../services/employee.service';
+import { ShiftService, Shift } from '../services/shift.service';
 
 @Component({
   selector: 'app-header',

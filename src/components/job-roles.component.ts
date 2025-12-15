@@ -1,13 +1,8 @@
-
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-interface JobRole {
-  id: number;
-  name: string; // Job Role
-  position: string; // Job Position / Designation
-}
+import { JobRole, JobRoleService } from '../services/job-roles.service';
+import { DesignationService } from '../services/designation.service';
 
 @Component({
   selector: 'app-job-roles',
@@ -80,10 +75,10 @@ interface JobRole {
             <div class="p-6 space-y-4">
               <div>
                 <label for="jobPosition" class="block text-sm font-medium text-slate-700">Job Position</label>
-                <select id="jobPosition" formControlName="position" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3">
+                <select id="jobPosition" formControlName="designation_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3">
                   <option value="" disabled>Select a job position</option>
-                  @for (designation of designations(); track designation) {
-                    <option [value]="designation">{{ designation }}</option>
+                  @for (designation of designations(); track designation.id) {
+                    <option [value]="designation.id">{{ designation.name }}</option>
                   }
                 </select>
               </div>
@@ -144,40 +139,29 @@ interface JobRole {
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class JobRolesComponent {
+  private jobRoleService = inject(JobRoleService);
+  private designationService = inject(DesignationService);
+
   showModal = signal(false);
   editingJobRole = signal<JobRole | null>(null);
   jobRoleToDelete = signal<JobRole | null>(null);
 
-  // Mock data for designations, this would ideally come from a shared service
-  designations = signal<string[]>([
-    'Software Engineer',
-    'Product Manager',
-    'UX Designer',
-    'Data Scientist',
-    'HR Manager'
-  ]);
-
-  jobRoles = signal<JobRole[]>([
-    { id: 1, name: 'Frontend Development', position: 'Software Engineer' },
-    { id: 2, name: 'Backend Development', position: 'Software Engineer' },
-    { id: 3, name: 'Mobile App Strategy', position: 'Product Manager' },
-    { id: 4, name: 'User Research', position: 'UX Designer' }
-  ]);
-
-  private nextId = signal(5);
+  designations = this.designationService.designations;
+  jobRoles = this.jobRoleService.jobRoles;
 
   jobRoleForm = new FormGroup({
-    position: new FormControl('', Validators.required),
+    designation_id: new FormControl<number | null>(null, Validators.required),
     name: new FormControl('', Validators.required),
   });
 
   openModal(jobRole: JobRole | null): void {
     if (jobRole) {
       this.editingJobRole.set(jobRole);
-      this.jobRoleForm.setValue({ name: jobRole.name, position: jobRole.position });
+      // Ensure we pass the designation_id correctly. If it's missing, it will default to null which is fine for editing
+      this.jobRoleForm.patchValue({ name: jobRole.name, designation_id: jobRole.designation_id });
     } else {
       this.editingJobRole.set(null);
-      this.jobRoleForm.reset({ position: '', name: '' });
+      this.jobRoleForm.reset({ designation_id: null, name: '' });
     }
     this.showModal.set(true);
   }
@@ -187,30 +171,28 @@ export class JobRolesComponent {
     this.editingJobRole.set(null);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.jobRoleForm.invalid) {
       return;
     }
 
-    const formValue = this.jobRoleForm.getRawValue();
+    const formValue = {
+      name: this.jobRoleForm.value.name!,
+      // Angular forms can sometimes have string values from selects even if typed number
+      designation_id: Number(this.jobRoleForm.value.designation_id!)
+    };
     const currentJobRole = this.editingJobRole();
 
-    if (currentJobRole) {
-      // Edit mode
-      this.jobRoles.update(roles =>
-        roles.map(r => r.id === currentJobRole.id ? { ...r, name: formValue.name!, position: formValue.position! } : r)
-      );
-    } else {
-      // Add mode
-      const newJobRole: JobRole = {
-        id: this.nextId(),
-        name: formValue.name!,
-        position: formValue.position!,
-      };
-      this.jobRoles.update(roles => [...roles, newJobRole]);
-      this.nextId.update(id => id + 1);
+    try {
+      if (currentJobRole) {
+        await this.jobRoleService.updateJobRole({ id: currentJobRole.id, ...formValue });
+      } else {
+        await this.jobRoleService.addJobRole(formValue);
+      }
+      this.closeModal();
+    } catch (e) {
+      console.error(e);
     }
-    this.closeModal();
   }
 
   promptDelete(jobRole: JobRole): void {
@@ -221,11 +203,15 @@ export class JobRolesComponent {
     this.jobRoleToDelete.set(null);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const jobRole = this.jobRoleToDelete();
     if (jobRole) {
-      this.jobRoles.update(roles => roles.filter(r => r.id !== jobRole.id));
-      this.cancelDelete();
+      try {
+        await this.jobRoleService.deleteJobRole(jobRole.id);
+        this.cancelDelete();
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 }
