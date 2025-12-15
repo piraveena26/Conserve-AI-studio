@@ -156,21 +156,21 @@ export class JobRolesComponent {
     'Data Scientist',
     'HR Manager'
   ]);
-  
+
   jobRoles = signal<JobRole[]>([
     { id: 1, name: 'Frontend Development', position: 'Software Engineer' },
     { id: 2, name: 'Backend Development', position: 'Software Engineer' },
     { id: 3, name: 'Mobile App Strategy', position: 'Product Manager' },
     { id: 4, name: 'User Research', position: 'UX Designer' }
   ]);
-  
+
   private nextId = signal(5);
 
   jobRoleForm = new FormGroup({
     position: new FormControl('', Validators.required),
     name: new FormControl('', Validators.required),
   });
-  
+
   openModal(jobRole: JobRole | null): void {
     if (jobRole) {
       this.editingJobRole.set(jobRole);
@@ -191,13 +191,13 @@ export class JobRolesComponent {
     if (this.jobRoleForm.invalid) {
       return;
     }
-    
+
     const formValue = this.jobRoleForm.getRawValue();
     const currentJobRole = this.editingJobRole();
 
     if (currentJobRole) {
       // Edit mode
-      this.jobRoles.update(roles => 
+      this.jobRoles.update(roles =>
         roles.map(r => r.id === currentJobRole.id ? { ...r, name: formValue.name!, position: formValue.position! } : r)
       );
     } else {

@@ -130,19 +130,19 @@ export class HeaderComponent implements OnDestroy {
   viewChanged = output<string>();
   logout = output<void>();
   goBack = output<void>();
-  
+
   private userService = inject(UserService);
   private employeeService = inject(EmployeeService);
   private shiftService = inject(ShiftService);
   private attendanceService = inject(AttendanceService);
   private fb = inject(FormBuilder);
-  
+
   private timerId: any = null;
   isRunning = signal(false);
   startTime = signal<number | null>(null);
   elapsedTime = signal(0); // in seconds
   showCheckinDropdown = signal(false);
-  
+
   shifts = this.shiftService.shifts;
   locationTypes: Array<'Office' | 'Project site' | 'Remote'> = ['Office', 'Project site', 'Remote'];
   checkinForm: FormGroup;
@@ -184,11 +184,11 @@ export class HeaderComponent implements OnDestroy {
         this.isRunning.set(true);
         this.startTime.set(activeCheckin.checkIn.getTime());
         this.timerId = setInterval(() => {
-            const now = Date.now();
-            const start = this.startTime();
-            if (start) {
-                this.elapsedTime.set(Math.floor((now - start) / 1000));
-            }
+          const now = Date.now();
+          const start = this.startTime();
+          if (start) {
+            this.elapsedTime.set(Math.floor((now - start) / 1000));
+          }
         }, 1000);
       }
     }
@@ -209,44 +209,44 @@ export class HeaderComponent implements OnDestroy {
     if (!currentUser || !currentUser.employeeId) return;
 
     const formValue = this.checkinForm.value;
-    
+
     try {
       this.attendanceService.checkIn({
-          employeeId: currentUser.employeeId,
-          location: formValue.location,
-          locationType: formValue.locationType,
-          shift: formValue.shift.name,
+        employeeId: currentUser.employeeId,
+        location: formValue.location,
+        locationType: formValue.locationType,
+        shift: formValue.shift.name,
       });
-      
+
       this.isRunning.set(true);
       this.startTime.set(Date.now());
       this.elapsedTime.set(0);
       this.timerId = setInterval(() => {
-          const now = Date.now();
-          const start = this.startTime();
-          if (start) {
-              this.elapsedTime.set(Math.floor((now - start) / 1000));
-          }
+        const now = Date.now();
+        const start = this.startTime();
+        if (start) {
+          this.elapsedTime.set(Math.floor((now - start) / 1000));
+        }
       }, 1000);
 
       this.showCheckinDropdown.set(false);
-      this.checkinForm.reset({locationType: '', shift: null});
+      this.checkinForm.reset({ locationType: '', shift: null });
     } catch (error) {
-        alert((error as Error).message);
-        this.showCheckinDropdown.set(false);
+      alert((error as Error).message);
+      this.showCheckinDropdown.set(false);
     }
   }
-  
+
   onCheckout(): void {
     const currentUser = this.userService.currentUser();
     if (!currentUser || !currentUser.employeeId) return;
-    
+
     this.attendanceService.checkOut(currentUser.employeeId);
 
     this.isRunning.set(false);
     if (this.timerId) {
-        clearInterval(this.timerId);
-        this.timerId = null;
+      clearInterval(this.timerId);
+      this.timerId = null;
     }
     this.startTime.set(null);
     this.elapsedTime.set(0);
@@ -254,16 +254,16 @@ export class HeaderComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timerId) {
-        clearInterval(this.timerId);
+      clearInterval(this.timerId);
     }
   }
 
   currentUser = this.userService.currentUser;
-  
+
   currentUserDesignation = computed(() => {
     const user = this.currentUser();
     if (!user || !user.employeeId) return 'N/A';
-    
+
     const employee = this.employeeService.employees().find(e => e.id === user.employeeId);
     return employee?.designation || 'N/A';
   });
@@ -306,7 +306,7 @@ export class HeaderComponent implements OnDestroy {
     }
 
     if (this.showCheckinDropdown() && this.checkinDropdown && !this.checkinDropdown.nativeElement.contains(target) && !this.checkinButton?.nativeElement.contains(target)) {
-        this.showCheckinDropdown.set(false);
+      this.showCheckinDropdown.set(false);
     }
   }
 }

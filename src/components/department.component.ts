@@ -1,7 +1,8 @@
 
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { DepartmentService } from '../services/department.service';
 
 interface Department {
   id: number;
@@ -130,24 +131,18 @@ interface Department {
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class DepartmentComponent {
+  private departmentService = inject(DepartmentService);
+
   showModal = signal(false);
   editingDepartment = signal<Department | null>(null);
   departmentToDelete = signal<Department | null>(null);
-  
-  departments = signal<Department[]>([
-    { id: 1, name: 'Technology' },
-    { id: 2, name: 'Product' },
-    { id: 3, name: 'Design' },
-    { id: 4, name: 'Human Resources' },
-    { id: 5, name: 'Marketing' }
-  ]);
-  
-  private nextId = signal(6);
+
+  departments = this.departmentService.departments;
 
   departmentForm = new FormGroup({
     name: new FormControl('', Validators.required),
   });
-  
+
   openModal(department: Department | null): void {
     if (department) {
       this.editingDepartment.set(department);
@@ -164,29 +159,32 @@ export class DepartmentComponent {
     this.editingDepartment.set(null);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.departmentForm.invalid || !this.departmentForm.value.name) {
       return;
     }
-    
+
     const departmentName = this.departmentForm.value.name.trim();
     const currentDepartment = this.editingDepartment();
 
-    if (currentDepartment) {
-      // Edit mode
-      this.departments.update(deps => 
-        deps.map(d => d.id === currentDepartment.id ? { ...d, name: departmentName } : d)
-      );
-    } else {
-      // Add mode
-      const newDepartment: Department = {
-        id: this.nextId(),
-        name: departmentName
-      };
-      this.departments.update(deps => [...deps, newDepartment]);
-      this.nextId.update(id => id + 1);
+    try {
+      if (currentDepartment) {
+        // Edit mode
+        await this.departmentService.updateDepartment({
+          ...currentDepartment,
+          name: departmentName
+        });
+      } else {
+        // Add mode
+        await this.departmentService.addDepartment({
+          name: departmentName
+        });
+      }
+      this.closeModal();
+    } catch (error) {
+      console.error('Error saving department:', error);
+      // Ideally show a toast/notification here
     }
-    this.closeModal();
   }
 
   promptDelete(department: Department): void {
@@ -197,11 +195,15 @@ export class DepartmentComponent {
     this.departmentToDelete.set(null);
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const department = this.departmentToDelete();
     if (department) {
-      this.departments.update(deps => deps.filter(d => d.id !== department.id));
-      this.cancelDelete();
+      try {
+        await this.departmentService.deleteDepartment(department.id);
+        this.cancelDelete();
+      } catch (error) {
+        console.error('Error deleting department:', error);
+      }
     }
   }
 }

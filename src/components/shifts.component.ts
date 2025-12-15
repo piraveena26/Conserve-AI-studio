@@ -177,7 +177,7 @@ export class ShiftsComponent {
   editingShift = signal<Shift | null>(null);
   shiftToDelete = signal<Shift | null>(null);
   shiftToView = signal<Shift | null>(null);
-  
+
   shifts = this.shiftService.shifts;
 
   shiftForm = new FormGroup({
@@ -185,12 +185,12 @@ export class ShiftsComponent {
     startTime: new FormControl('', Validators.required),
     endTime: new FormControl('', Validators.required),
   });
-  
+
   openModal(shift: Shift | null): void {
     if (shift) {
       this.editingShift.set(shift);
-      this.shiftForm.setValue({ 
-        name: shift.name, 
+      this.shiftForm.setValue({
+        name: shift.name,
         startTime: shift.startTime,
         endTime: shift.endTime
       });
@@ -210,7 +210,7 @@ export class ShiftsComponent {
     if (this.shiftForm.invalid || !this.shiftForm.value.name || !this.shiftForm.value.startTime || !this.shiftForm.value.endTime) {
       return;
     }
-    
+
     const formValue = this.shiftForm.getRawValue();
     const currentShift = this.editingShift();
 

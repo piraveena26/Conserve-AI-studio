@@ -34,7 +34,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "port": 3000
+            "port": 3000,
+            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {
@@ -48,5 +49,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "4e863b7a-a89d-4fc4-b770-345c9d1470cf"
   }
 }

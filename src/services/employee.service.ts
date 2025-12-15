@@ -51,7 +51,7 @@ export interface Employee {
   avatar: string;
   // Detailed fields for edit tabs
   firstName: string;
-  lastName:string;
+  lastName: string;
   organization: string;
   orgDateOfJoining: string; // Organization DOJ
   ksaEmploymentJoining: string; // KSA DOJ
@@ -110,9 +110,9 @@ export interface Employee {
 })
 export class EmployeeService {
   private readonly _employees = signal<Employee[]>([
-     { 
-      id: 'EMP001', name: 'Thavarasha Kunaraj', email: 'thava@conserve.com', employeeId: '1106', 
-      designation: 'Assistant Manager', department: 'KSA-Administration - Conserve Solutions', status: 'Active', 
+    {
+      id: 'EMP001', name: 'Thavarasha Kunaraj', email: 'thava@conserve.com', employeeId: '1106',
+      designation: 'Assistant Manager', department: 'KSA-Administration - Conserve Solutions', status: 'Active',
       avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?w=800&q=80',
       firstName: 'Thavarasha', lastName: 'Kunaraj', organization: 'org1', orgDateOfJoining: '2020-12-26',
       ksaEmploymentJoining: '2022-12-27', category: 'Trainee', reportingTo: 'EMP002', // Venkatesh S
@@ -120,10 +120,10 @@ export class EmployeeService {
       gender: 'Male',
       personalEmail: 'thava@personal.com',
       skills: ['Angular', 'TypeScript', 'Node.js'],
-      personalDetails: { 
-        dateOfBirth: '1998-09-05', 
-        dobOriginal: '1999-01-01', 
-        maritalStatus: 'Single', 
+      personalDetails: {
+        dateOfBirth: '1998-09-05',
+        dobOriginal: '1999-01-01',
+        maritalStatus: 'Single',
         permanentAddress: '123 Main St, Anytown, USA',
         fatherOrSpouseName: 'Kunaraj',
         bloodGroup: 'O+',
@@ -149,8 +149,8 @@ export class EmployeeService {
         reasonForLeaving: 'Better opportunity'
       }],
       references: [{ referenceName: 'Jane Smith', company: 'Tech Solutions', designation: 'Manager', contactNumber: '555-555-5555' }],
-      identification: { 
-        aadharNumber: '1234 5678 9012', 
+      identification: {
+        aadharNumber: '1234 5678 9012',
         panNumber: 'ABCDE1234F',
         drivingLicenseNumber: 'DL123456789',
         licenseValidUpTo: '2030-10-20',
@@ -164,9 +164,9 @@ export class EmployeeService {
       compensation: { basicSalary: 60000, hra: 10000, otherAllowances: 5000, ctc: 80000, costPerHour: 40 },
       bankDetails: { bankName: 'First National Bank', branchName: 'Downtown', accountNumber: '1234567890', ifscCode: 'FNBK0001' }
     },
-    { id: 'EMP002', name: 'Venkatesh S', email: 'venkatesh.s@example.com', employeeId: 'JS002', designation: 'Product Manager', department: 'Product', status: 'Active', avatar: 'https://picsum.photos/id/1011/200/200', firstName: 'Venkatesh', lastName: 'S', skills: [], personalDetails: { dateOfBirth: '1990-01-01', dobOriginal: '1990-01-01', maritalStatus: 'Married', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: ''}, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: {bankName: '', branchName: '', accountNumber: '', ifscCode: ''}, organization: '', orgDateOfJoining: '2019-01-01', ksaEmploymentJoining: '2021-01-01', category: 'C3', reportingTo: '', phoneNumber: '', nationality: 'Indian', employmentType: 'Full-time', gender: 'Male', personalEmail: '', countryCode: '+91', alternateContact: ''},
-    { id: 'EMP003', name: 'Susan Wilson', email: 'susan.wilson@example.com', employeeId: 'SW003', designation: 'UX Designer', department: 'Design', status: 'Terminated', avatar: 'https://picsum.photos/id/1027/200/200', firstName: 'Susan', lastName: 'Wilson', skills: [], personalDetails: { dateOfBirth: '', dobOriginal: '', maritalStatus: 'Single', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: ''}, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: {bankName: '', branchName: '', accountNumber: '', ifscCode: ''}, organization: '', orgDateOfJoining: '', ksaEmploymentJoining: '', category: '', reportingTo: '', phoneNumber: '', nationality: '', employmentType: 'Full-time', gender: 'Female', personalEmail: '', countryCode: '+1', alternateContact: ''},
-    { id: 'EMP004', name: 'Allyce Brown', email: 'allyce.brown@example.com', employeeId: 'AB004', designation: 'Data Scientist', department: 'Analytics', status: 'Resigned', avatar: 'https://picsum.photos/id/3/200/200', firstName: 'Allyce', lastName: 'Brown', skills: [], personalDetails: { dateOfBirth: '', dobOriginal: '', maritalStatus: 'Single', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: ''}, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: {bankName: '', branchName: '', accountNumber: '', ifscCode: ''}, organization: '', orgDateOfJoining: '', ksaEmploymentJoining: '', category: '', reportingTo: '', phoneNumber: '', nationality: '', employmentType: 'Full-time', gender: 'Female', personalEmail: '', countryCode: '+44', alternateContact: ''},
+    { id: 'EMP002', name: 'Venkatesh S', email: 'venkatesh.s@example.com', employeeId: 'JS002', designation: 'Product Manager', department: 'Product', status: 'Active', avatar: 'https://picsum.photos/id/1011/200/200', firstName: 'Venkatesh', lastName: 'S', skills: [], personalDetails: { dateOfBirth: '1990-01-01', dobOriginal: '1990-01-01', maritalStatus: 'Married', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: '' }, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: { bankName: '', branchName: '', accountNumber: '', ifscCode: '' }, organization: '', orgDateOfJoining: '2019-01-01', ksaEmploymentJoining: '2021-01-01', category: 'C3', reportingTo: '', phoneNumber: '', nationality: 'Indian', employmentType: 'Full-time', gender: 'Male', personalEmail: '', countryCode: '+91', alternateContact: '' },
+    { id: 'EMP003', name: 'Susan Wilson', email: 'susan.wilson@example.com', employeeId: 'SW003', designation: 'UX Designer', department: 'Design', status: 'Terminated', avatar: 'https://picsum.photos/id/1027/200/200', firstName: 'Susan', lastName: 'Wilson', skills: [], personalDetails: { dateOfBirth: '', dobOriginal: '', maritalStatus: 'Single', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: '' }, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: { bankName: '', branchName: '', accountNumber: '', ifscCode: '' }, organization: '', orgDateOfJoining: '', ksaEmploymentJoining: '', category: '', reportingTo: '', phoneNumber: '', nationality: '', employmentType: 'Full-time', gender: 'Female', personalEmail: '', countryCode: '+1', alternateContact: '' },
+    { id: 'EMP004', name: 'Allyce Brown', email: 'allyce.brown@example.com', employeeId: 'AB004', designation: 'Data Scientist', department: 'Analytics', status: 'Resigned', avatar: 'https://picsum.photos/id/3/200/200', firstName: 'Allyce', lastName: 'Brown', skills: [], personalDetails: { dateOfBirth: '', dobOriginal: '', maritalStatus: 'Single', permanentAddress: '', fatherOrSpouseName: '', bloodGroup: '', residentialAddress: '', emergencyContactNumber: '', relation: '', contactNumber: '' }, education: [], experience: [], references: [], identification: { aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: '' }, compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 }, bankDetails: { bankName: '', branchName: '', accountNumber: '', ifscCode: '' }, organization: '', orgDateOfJoining: '', ksaEmploymentJoining: '', category: '', reportingTo: '', phoneNumber: '', nationality: '', employmentType: 'Full-time', gender: 'Female', personalEmail: '', countryCode: '+44', alternateContact: '' },
   ]);
 
   private _nextId = signal(5);
@@ -201,22 +201,22 @@ export class EmployeeService {
       gender: 'Male', // default
       skills: [],
       personalDetails: {
-          dateOfBirth: '',
-          dobOriginal: '',
-          maritalStatus: 'Single',
-          fatherOrSpouseName: '',
-          bloodGroup: '',
-          residentialAddress: '',
-          permanentAddress: '',
-          emergencyContactNumber: '',
-          relation: '',
-          contactNumber: '',
+        dateOfBirth: '',
+        dobOriginal: '',
+        maritalStatus: 'Single',
+        fatherOrSpouseName: '',
+        bloodGroup: '',
+        residentialAddress: '',
+        permanentAddress: '',
+        emergencyContactNumber: '',
+        relation: '',
+        contactNumber: '',
       },
       education: [],
       experience: [],
       references: [],
       identification: {
-          aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: ''
+        aadharNumber: '', panNumber: '', drivingLicenseNumber: '', licenseValidUpTo: '', passportNumber: '', passportValidUpTo: '', visaType: '', visaNumber: '', visaValidUpTo: '', sponsor: ''
       },
       compensation: { basicSalary: 0, hra: 0, otherAllowances: 0, ctc: 0, costPerHour: 0 },
       bankDetails: { bankName: '', branchName: '', accountNumber: '', ifscCode: '' }
@@ -226,11 +226,11 @@ export class EmployeeService {
   }
 
   deleteEmployee(employeeId: string): void {
-      this._employees.update(employees => employees.filter(e => e.id !== employeeId));
+    this._employees.update(employees => employees.filter(e => e.id !== employeeId));
   }
-  
+
   updateEmployee(updatedEmployee: Employee): void {
-    this._employees.update(employees => 
+    this._employees.update(employees =>
       employees.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp)
     );
   }
@@ -366,25 +366,25 @@ export interface LeaveRequest {
 })
 export class LeaveService {
   private readonly _leaveRequests = signal<LeaveRequest[]>([
-     { id: 1, employeeId: 'EMP003', leaveType: 'Vacation', leaveRange: 'More Than a Day', fromDate: '2025-12-10', toDate: '2025-12-15', reason: 'Family trip', status: 'Approved', appliedOn: new Date('2025-11-20') },
-     { id: 2, employeeId: 'EMP004', leaveType: 'Sick Leave', leaveRange: 'One Day', date: '2025-12-16', reason: 'Fever', status: 'Approved', appliedOn: new Date('2025-12-16') },
+    { id: 1, employeeId: 'EMP003', leaveType: 'Vacation', leaveRange: 'More Than a Day', fromDate: '2025-12-10', toDate: '2025-12-15', reason: 'Family trip', status: 'Approved', appliedOn: new Date('2025-11-20') },
+    { id: 2, employeeId: 'EMP004', leaveType: 'Sick Leave', leaveRange: 'One Day', date: '2025-12-16', reason: 'Fever', status: 'Approved', appliedOn: new Date('2025-12-16') },
   ]);
   public readonly leaveRequests = this._leaveRequests.asReadonly();
 
   getOnLeaveEmployeeIdsForDate(date: string): string[] {
     const onLeave = new Set<string>();
-    
+
     const targetDate = new Date(date);
     targetDate.setUTCHours(0, 0, 0, 0);
 
     this.leaveRequests().forEach(req => {
       if (req.status === 'Approved') {
         if (req.leaveRange === 'One Day' && req.date) {
-            const reqDate = new Date(req.date);
-            reqDate.setUTCHours(0, 0, 0, 0);
-            if (reqDate.getTime() === targetDate.getTime()) {
-                onLeave.add(req.employeeId);
-            }
+          const reqDate = new Date(req.date);
+          reqDate.setUTCHours(0, 0, 0, 0);
+          if (reqDate.getTime() === targetDate.getTime()) {
+            onLeave.add(req.employeeId);
+          }
         } else if (req.leaveRange === 'More Than a Day' && req.fromDate && req.toDate) {
           const from = new Date(req.fromDate);
           from.setUTCHours(0, 0, 0, 0);

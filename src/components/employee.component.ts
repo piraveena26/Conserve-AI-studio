@@ -654,7 +654,7 @@ export class EmployeeComponent {
   private readonly userService = inject(UserService);
   private readonly userRequestService = inject(UserRequestService);
   private readonly fb = inject(FormBuilder);
-  
+
   viewProfile = output<string>();
 
   showAddModal = signal(false);
@@ -663,7 +663,7 @@ export class EmployeeComponent {
   employeeToDelete = signal<Employee | null>(null);
   employeeToInvite = signal<Employee | null>(null);
   activeEditTab = signal('basic_info');
-  
+
   employees = this.employeeService.employees;
   currentUser = this.userService.currentUser;
 
@@ -671,7 +671,7 @@ export class EmployeeComponent {
 
   userEmployeeIds = computed(() => new Set(this.userService.users().map(u => u.employeeId)));
   pendingInviteIds = computed(() => new Set(this.userRequestService.requests().map(r => r.id)));
-  
+
   statusColors: Record<Employee['status'], string> = { 'Active': 'bg-green-500', 'Resigned': 'bg-rose-500', 'Absconded': 'bg-orange-500', 'Terminated': 'bg-red-500', 'Transferred': 'bg-purple-500' };
   organizations = signal([{ id: 'org1', name: 'Innovate Corp HQ' }, { id: 'org2', name: 'Synergy Solutions Inc.' }]);
   departments = signal(['Technology', 'Product', 'Design', 'Human Resources', 'Marketing', 'KSA-Administration - Conserve Solutions']);
@@ -769,7 +769,7 @@ export class EmployeeComponent {
       ifscCode: ['']
     });
   }
-  
+
   get educationsArray() { return this.educationForm.get('educations') as FormArray; }
   get experiencesArray() { return this.experienceForm.get('experiences') as FormArray; }
   get referencesArray() { return this.referencesForm.get('references') as FormArray; }
@@ -785,7 +785,7 @@ export class EmployeeComponent {
   // --- Methods ---
   openAddModal() { this.showAddModal.set(true); }
   closeAddModal() { this.showAddModal.set(false); this.addEmployeeForm.reset({ countryCode: '+91', employeeStatus: 'Active' }); }
-  onAddSubmit() { 
+  onAddSubmit() {
     if (this.addEmployeeForm.invalid) {
       this.addEmployeeForm.markAllAsTouched();
       return;
@@ -808,7 +808,7 @@ export class EmployeeComponent {
       employmentType: formValue.employmentType,
       status: formValue.employeeStatus as Employee['status'],
     };
-    
+
     this.employeeService.addEmployee(newEmployeeData as Partial<Employee>);
     this.closeAddModal();
   }
@@ -816,7 +816,7 @@ export class EmployeeComponent {
   openEditModal(employee: Employee) {
     this.editingEmployee.set(employee);
     this.activeEditTab.set('basic_info');
-    
+
     this.basicInfoForm.patchValue({
       firstName: employee.firstName, lastName: employee.lastName, employeeId: employee.employeeId,
       organizationDOJ: employee.orgDateOfJoining, ksaDOJ: employee.ksaEmploymentJoining, department: employee.department,
@@ -828,14 +828,14 @@ export class EmployeeComponent {
     });
 
     this.skillsForm.patchValue({ skill1: employee.skills?.[0] || '', skill2: employee.skills?.[1] || '', skill3: employee.skills?.[2] || '' });
-    
+
     this.personalDetailsForm.patchValue({
       fatherOrSpouseName: employee.personalDetails.fatherOrSpouseName, bloodGroup: employee.personalDetails.bloodGroup,
       residentialAddress: employee.personalDetails.residentialAddress, permanentAddress: employee.personalDetails.permanentAddress,
       emergencyContactNumber: employee.personalDetails.emergencyContactNumber, relation: employee.personalDetails.relation,
       contactNumber: employee.personalDetails.contactNumber,
     });
-    
+
     this.educationsArray.clear();
     if (employee.education?.length > 0) {
       employee.education.forEach(edu => this.educationsArray.push(this.createEducationGroup(edu)));
@@ -845,7 +845,7 @@ export class EmployeeComponent {
     if (employee.experience?.length > 0) {
       employee.experience.forEach(exp => this.experiencesArray.push(this.createExperienceGroup(exp)));
     } else { this.addExperience(); }
-    
+
     this.referencesArray.clear();
     if (employee.references?.length > 0) {
       employee.references.forEach(ref => this.referencesArray.push(this.createReferenceGroup(ref)));
@@ -876,9 +876,9 @@ export class EmployeeComponent {
     const employee = this.employeeToInvite();
     if (employee) { this.userRequestService.sendInvitation(employee); this.closeInviteModal(); }
   }
-  
+
   setActiveTab(tabId: string) { this.activeEditTab.set(tabId); }
-  
+
   getTabClass(tabId: string): string {
     const base = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
     return this.activeEditTab() === tabId ? `${base} border-blue-500 text-blue-600` : `${base} border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300`;
@@ -888,21 +888,21 @@ export class EmployeeComponent {
     const editing = this.editingEmployee();
     if (!editing) return;
 
-    if (this.basicInfoForm.invalid || this.skillsForm.invalid || this.personalDetailsForm.invalid || 
-       this.educationForm.invalid || this.experienceForm.invalid || this.referencesForm.invalid || 
-       this.identificationForm.invalid || this.compensationForm.invalid || this.bankDetailsForm.invalid) {
-        
-        this.basicInfoForm.markAllAsTouched();
-        this.skillsForm.markAllAsTouched();
-        this.personalDetailsForm.markAllAsTouched();
-        this.educationForm.markAllAsTouched();
-        this.experienceForm.markAllAsTouched();
-        this.referencesForm.markAllAsTouched();
-        this.identificationForm.markAllAsTouched();
-        this.compensationForm.markAllAsTouched();
-        this.bankDetailsForm.markAllAsTouched();
-        console.error('One or more forms are invalid.');
-        return;
+    if (this.basicInfoForm.invalid || this.skillsForm.invalid || this.personalDetailsForm.invalid ||
+      this.educationForm.invalid || this.experienceForm.invalid || this.referencesForm.invalid ||
+      this.identificationForm.invalid || this.compensationForm.invalid || this.bankDetailsForm.invalid) {
+
+      this.basicInfoForm.markAllAsTouched();
+      this.skillsForm.markAllAsTouched();
+      this.personalDetailsForm.markAllAsTouched();
+      this.educationForm.markAllAsTouched();
+      this.experienceForm.markAllAsTouched();
+      this.referencesForm.markAllAsTouched();
+      this.identificationForm.markAllAsTouched();
+      this.compensationForm.markAllAsTouched();
+      this.bankDetailsForm.markAllAsTouched();
+      console.error('One or more forms are invalid.');
+      return;
     }
 
     const basicInfo = this.basicInfoForm.getRawValue();
@@ -936,8 +936,8 @@ export class EmployeeComponent {
       nationality: basicInfo.nationality,
       employmentType: basicInfo.employmentType,
       status: basicInfo.employeeStatus,
-      
-      skills: Object.values(skills).filter(s => s),
+
+      skills: Object.values(skills).filter((s): s is string => typeof s === 'string' && s.length > 0),
 
       personalDetails: {
         ...editing.personalDetails,
@@ -963,7 +963,7 @@ export class EmployeeComponent {
         ...bankDetails,
       }
     };
-    
+
     this.employeeService.updateEmployee(updatedEmployee);
     this.closeEditModal();
   }

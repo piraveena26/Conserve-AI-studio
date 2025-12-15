@@ -150,7 +150,7 @@ export class DesignationComponent {
 
   // Mock data, in a real app this would likely come from a service
   departments = signal<string[]>(['Technology', 'Product', 'Design', 'Human Resources', 'Marketing', 'Analytics']);
-  
+
   designations = signal<Designation[]>([
     { id: 1, name: 'Software Engineer', department: 'Technology' },
     { id: 2, name: 'Product Manager', department: 'Product' },
@@ -158,14 +158,14 @@ export class DesignationComponent {
     { id: 4, name: 'Data Scientist', department: 'Analytics' },
     { id: 5, name: 'HR Manager', department: 'Human Resources' }
   ]);
-  
+
   private nextId = signal(6);
 
   designationForm = new FormGroup({
     department: new FormControl('', Validators.required),
     name: new FormControl('', Validators.required),
   });
-  
+
   openModal(designation: Designation | null): void {
     if (designation) {
       this.editingDesignation.set(designation);
@@ -186,13 +186,13 @@ export class DesignationComponent {
     if (this.designationForm.invalid) {
       return;
     }
-    
+
     const formValue = this.designationForm.getRawValue();
     const currentDesignation = this.editingDesignation();
 
     if (currentDesignation) {
       // Edit mode
-      this.designations.update(desgs => 
+      this.designations.update(desgs =>
         desgs.map(d => d.id === currentDesignation.id ? { ...d, name: formValue.name!, department: formValue.department! } : d)
       );
     } else {
