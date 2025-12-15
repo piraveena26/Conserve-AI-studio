@@ -8,6 +8,7 @@ import shiftController from './controllers/shiftController.js';
 import employeeController from './controllers/employeeController.js';
 import periodController from './controllers/periodController.js';
 import metricController from './controllers/metricController.js';
+import goalController from './controllers/goalController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
@@ -15,6 +16,7 @@ import shiftRoutes from './routes/shiftRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import periodRoutes from './routes/periodRoutes.js';
 import metricRoutes from './routes/metricRoutes.js';
+import goalRoutes from './routes/goalRoutes.js';
 
 dotenv.config();
 
@@ -34,6 +36,7 @@ const initDB = async () => {
     await employeeController.createTable();
     await periodController.createTable();
     await metricController.createTable();
+    await goalController.createTable();
 };
 initDB();
 
@@ -45,6 +48,7 @@ app.use('/api/shifts', shiftRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/periods', periodRoutes);
 app.use('/api/metrics', metricRoutes);
+app.use('/api/goals', goalRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

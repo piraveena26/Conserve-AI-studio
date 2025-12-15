@@ -1,33 +1,13 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 
 // Mocked from other components for dependency
-interface JobRole {
-  id: number;
-  name: string;
-}
+// interface JobRole removed in favor of service import
 
-interface PmsMetric {
-  id: number;
-  metricType: string;
-  metric: string;
-  definition5star: number;
-  definition4star: number;
-  definition3star: number;
-  definition2star: number;
-  definition1star: number;
-}
-
-interface PmsGoal {
-  id: number;
-  jobRole: string;
-  goalTitle: string;
-  weightage: number;
-  metric: PmsMetric;
-  baseline: string;
-  assessmentPeriod: 'Monthly' | 'Quarterly' | 'Half-yearly' | 'Yearly';
-}
+import { GoalService, PmsGoal } from '../services/goal.service';
+import { MetricService, Metric } from '../services/metric.service';
+import { JobRoleService, JobRole } from '../services/job-roles.service';
 
 @Component({
   selector: 'app-pms-goals',
@@ -215,26 +195,21 @@ interface PmsGoal {
   imports: [CommonModule, ReactiveFormsModule],
 })
 export class PmsGoalsComponent {
+  private goalService = inject(GoalService);
+  private metricService = inject(MetricService);
+  private jobRoleService = inject(JobRoleService);
+
   showModal = signal(false);
   editingGoal = signal<PmsGoal | null>(null);
   goalToDelete = signal<PmsGoal | null>(null);
   searchTerm = signal('');
   selectedJobRoleFilter = signal<string>('All');
-  private nextId = signal(2);
 
-  jobRoles = signal<JobRole[]>([
-    { id: 1, name: 'Frontend Development' },
-    { id: 2, name: 'Backend Development' },
-    { id: 3, name: 'Mobile App Strategy' },
-    { id: 4, name: 'User Research' },
-  ]);
+  jobRoles = this.jobRoleService.jobRoles;
 
-  metrics = signal<PmsMetric[]>([
-    { id: 409, metricType: 'Code Quality', metric: 'Number of bugs reported post-release.', definition5star: 0, definition4star: 1, definition3star: 2, definition2star: 3, definition1star: 4 },
-    { id: 410, metricType: 'Feature Delivery', metric: 'On-time delivery of planned features (in %).', definition5star: 100, definition4star: 95, definition3star: 90, definition2star: 85, definition1star: 80 },
-  ]);
+  metrics = this.metricService.metrics;
 
-  goals = signal<PmsGoal[]>([]);
+  goals = this.goalService.goals;
 
   assessmentPeriods: PmsGoal['assessmentPeriod'][] = ['Monthly', 'Quarterly', 'Half-yearly', 'Yearly'];
 
@@ -242,23 +217,23 @@ export class PmsGoalsComponent {
     jobRole: new FormControl<string | null>(null, Validators.required),
     goalTitle: new FormControl('', Validators.required),
     weightage: new FormControl<number | null>(null, [Validators.required, Validators.min(1), Validators.max(100)]),
-    metric: new FormControl<PmsMetric | null>(null, Validators.required),
+    metric: new FormControl<Metric | null>(null, Validators.required),
     baseline: new FormControl('', Validators.required),
     assessmentPeriod: new FormControl<PmsGoal['assessmentPeriod'] | null>(null, Validators.required),
   });
-  
-  selectedMetric = signal<PmsMetric | null>(null);
+
+  selectedMetric = signal<Metric | null>(null);
 
   constructor() {
     this.goalForm.controls.metric.valueChanges.subscribe(metric => {
       this.selectedMetric.set(metric);
     });
   }
-  
+
   filteredGoals = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const roleFilter = this.selectedJobRoleFilter();
-    
+
     let goals = this.goals();
 
     if (roleFilter !== 'All') {
@@ -266,8 +241,8 @@ export class PmsGoalsComponent {
     }
 
     if (!term) return goals;
-    
-    return goals.filter(g => 
+
+    return goals.filter(g =>
       g.goalTitle.toLowerCase().includes(term) ||
       g.jobRole.toLowerCase().includes(term)
     );
@@ -314,16 +289,12 @@ export class PmsGoalsComponent {
     };
 
     if (currentGoal) {
-      this.goals.update(goals =>
-        goals.map(g => g.id === currentGoal.id ? { ...currentGoal, ...goalData } : g)
-      );
+      this.goalService.updateGoal({
+        ...currentGoal,
+        ...goalData
+      });
     } else {
-      const newGoal: PmsGoal = {
-        id: this.nextId(),
-        ...goalData,
-      };
-      this.goals.update(goals => [...goals, newGoal]);
-      this.nextId.update(id => id + 1);
+      this.goalService.addGoal(goalData);
     }
     this.closeModal();
   }
@@ -339,7 +310,7 @@ export class PmsGoalsComponent {
   confirmDelete(): void {
     const goal = this.goalToDelete();
     if (goal) {
-      this.goals.update(goals => goals.filter(g => g.id !== goal.id));
+      this.goalService.deleteGoal(goal.id);
       this.cancelDelete();
     }
   }
