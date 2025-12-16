@@ -1,25 +1,9 @@
-
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Employee, EmployeeService } from '../services/employee.service';
+import { WorkAllocationService, WorkAllocation } from '../services/work-allocation.service';
 
-// --- Interfaces ---
-interface WorkAllocation {
-  id: number;
-  employeeId: string;
-  badgeId: string;
-  employeeName: string;
-  projectId: string;
-  projectName: string;
-  reportingToId: string;
-  reportingToName: string;
-  billability: 'Billable' | 'Non-Billable';
-  billingRole: string;
-  attendance: 'PRESENT' | 'PERMISSION' | 'ON DUTY' | 'HOLIDAY' | 'LEAVE' | 'WFO' | 'Informed Leave' | 'Uninformed Leave';
-  date: string; // YYYY-MM-DD
-  department: string;
-}
 
 interface Project {
   id: string;
@@ -461,12 +445,13 @@ interface DepartmentSummary {
 export class WorkAllocationComponent implements OnInit {
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
+  workAllocationService = inject(WorkAllocationService);
 
   activeTab = signal<'dashboard' | 'workAllocation'>('dashboard');
-  allocations = signal<WorkAllocation[]>([]);
+  allocations = this.workAllocationService.allocations;
   editingAllocation = signal<WorkAllocation | null>(null);
-  
-  filterDate = signal<string>(new Date('2025-12-14').toISOString().split('T')[0]);
+
+  filterDate = signal<string>(new Date().toISOString().split('T')[0]);
   filterFromDate = signal<string>('');
   filterToDate = signal<string>('');
   searchTerm = signal('');
@@ -492,10 +477,10 @@ export class WorkAllocationComponent implements OnInit {
   });
 
   reportTypes = [
-    'Department Wise Reports', 
-    'Project Wise Reports', 
-    'Reporting Manager Reports', 
-    'Summary Reports', 
+    'Department Wise Reports',
+    'Project Wise Reports',
+    'Reporting Manager Reports',
+    'Summary Reports',
     'Jump Project Reports'
   ];
   selectedReportType = signal(this.reportTypes[0]);
@@ -508,7 +493,7 @@ export class WorkAllocationComponent implements OnInit {
   // --- End Dashboard Properties ---
 
 
-  employees = computed(() => this.employeeService.employees().map(e => ({id: e.id, name: e.name})));
+  employees = computed(() => this.employeeService.employees().map(e => ({ id: e.id, name: e.name })));
   projects = signal<Project[]>([
     { id: 'p1', name: 'Amaala Triple Bay - Medical Wellness' },
     { id: 'p2', name: 'Expand Upstream High- Perform.C.' },
@@ -518,22 +503,25 @@ export class WorkAllocationComponent implements OnInit {
   billabilityOptions: WorkAllocation['billability'][] = ['Billable', 'Non-Billable'];
   billingRoles: string[] = ['Accounts & Admin Executive', 'BIM Modeller / Draftsman', 'Country Manager', 'KSA-Administration'];
   attendanceOptions: WorkAllocation['attendance'][] = ['PRESENT', 'PERMISSION', 'ON DUTY', 'HOLIDAY', 'LEAVE', 'WFO', 'Informed Leave', 'Uninformed Leave'];
-  
+
   filteredAllocations = computed(() => {
     const allAllocations = this.allocations();
     const term = this.searchTerm().toLowerCase();
     const fDate = this.filterDate();
     const from = this.filterFromDate();
     const to = this.filterToDate();
-    
+
     return allAllocations.filter(alloc => {
+      // Normalize alloc date to YYYY-MM-DD string in local timezone
+      const allocDate = new Date(alloc.date).toLocaleDateString('en-CA');
+
       let dateMatch = false;
       if (from && to) {
-        dateMatch = alloc.date >= from && alloc.date <= to;
+        dateMatch = allocDate >= from && allocDate <= to;
       } else if (fDate) {
-        dateMatch = alloc.date === fDate;
+        dateMatch = allocDate === fDate;
       } else {
-        dateMatch = true; 
+        dateMatch = true;
       }
 
       const termMatch = !term ||
@@ -551,7 +539,7 @@ export class WorkAllocationComponent implements OnInit {
     const billingRoles = this.billingRoles;
 
     const report = new Map<string, any>();
-    
+
     projects.forEach(p => {
       const projectRow: any = {
         projectName: p.name, presentCount: 0, absentCount: 0, wfhCount: 0,
@@ -564,16 +552,16 @@ export class WorkAllocationComponent implements OnInit {
     allocations.forEach(alloc => {
       if (report.has(alloc.projectName)) {
         const projectRow = report.get(alloc.projectName);
-        
+
         if (billingRoles.includes(alloc.billingRole)) {
           projectRow[alloc.billingRole]++;
         }
 
         if (alloc.attendance === 'PRESENT' || alloc.attendance === 'WFO') projectRow.presentCount++;
         else if (['HOLIDAY', 'LEAVE', 'Informed Leave', 'Uninformed Leave', 'PERMISSION'].includes(alloc.attendance)) projectRow.absentCount++;
-        
+
         projectRow.grandTotal++;
-        
+
         if (alloc.billability === 'Billable') projectRow.billingCount++;
         else projectRow.nonBillingCount++;
       }
@@ -639,7 +627,7 @@ export class WorkAllocationComponent implements OnInit {
     { id: 'actions', name: 'Actions' },
   ];
   visibleColumns = signal(new Set(this.allColumns.map(c => c.id)));
-  
+
   ngOnInit() {
     this.allocationForm = this.fb.group({
       employeeId: ['', Validators.required],
@@ -649,44 +637,6 @@ export class WorkAllocationComponent implements OnInit {
       billingRole: ['', Validators.required],
       attendance: ['', Validators.required],
     });
-
-    this.allocations.set([
-      {
-        id: 1, employeeId: 'EMP001', badgeId: 'CONSA-008', employeeName: 'Thavarasha Kunaraj',
-        projectId: 'p1', projectName: 'Amaala Triple Bay - Medical Wellness',
-        reportingToId: 'EMP002', reportingToName: 'Venkatesh S',
-        billability: 'Non-Billable', billingRole: 'Country Manager',
-        attendance: 'PERMISSION', date: '2025-12-14', department: 'ACOUSTICS'
-      },
-      {
-        id: 2, employeeId: 'EMP002', badgeId: 'CONSA-014', employeeName: 'Venkatesh S',
-        projectId: 'p2', projectName: 'Expand Upstream High- Perform.C.',
-        reportingToId: 'EMP002', reportingToName: 'Venkatesh S',
-        billability: 'Billable', billingRole: 'Accounts & Admin Executive',
-        attendance: 'Informed Leave', date: '2025-12-14', department: 'ENGINEERING'
-      },
-      {
-        id: 3, employeeId: 'EMP003', badgeId: 'CONSA-017', employeeName: 'Susan Wilson',
-        projectId: 'p3', projectName: 'Exit 15 Entertainment Complex',
-        reportingToId: 'EMP002', reportingToName: 'Venkatesh S',
-        billability: 'Billable', billingRole: 'KSA-Administration',
-        attendance: 'Uninformed Leave', date: '2025-12-14', department: 'SIMULATION & ANALYSIS'
-      },
-      {
-        id: 4, employeeId: 'EMP004', badgeId: 'CONSA-008', employeeName: 'Allyce Brown',
-        projectId: 'p4', projectName: 'Medical Wellness',
-        reportingToId: 'EMP003', reportingToName: 'Susan Wilson',
-        billability: 'Billable', billingRole: 'BIM Modeller / Draftsman',
-        attendance: 'WFO', date: '2025-12-14', department: 'LASER SCANNING'
-      },
-       {
-        id: 5, employeeId: 'EMP001', badgeId: 'CONSA-008', employeeName: 'Thavarasha Kunaraj',
-        projectId: 'p4', projectName: 'Medical Wellness',
-        reportingToId: 'EMP002', reportingToName: 'Venkatesh S',
-        billability: 'Billable', billingRole: 'KSA-Administration',
-        attendance: 'PRESENT', date: '2025-12-14', department: 'SIMULATION & ANALYSIS'
-      },
-    ]);
   }
 
   getTabClass(tabName: 'dashboard' | 'workAllocation'): string {
@@ -696,7 +646,7 @@ export class WorkAllocationComponent implements OnInit {
     }
     return `${base} border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300`;
   }
-  
+
   toggleColumn(columnId: string): void {
     this.visibleColumns.update(cols => {
       const newCols = new Set(cols);
@@ -738,14 +688,12 @@ export class WorkAllocationComponent implements OnInit {
 
     const editing = this.editingAllocation();
     if (editing) {
-      this.allocations.update(allocs => 
-        allocs.map(a => a.id === editing.id ? { ...editing, ...allocationData } : a)
-      );
+      this.workAllocationService.updateAllocation(editing.id, allocationData);
       this.editingAllocation.set(null);
     } else {
-      this.allocations.update(allocs => [...allocs, { ...allocationData, id: Date.now() + Math.random() }]);
+      this.workAllocationService.createAllocation(allocationData);
     }
-    
+
     this.allocationForm.reset({ employeeId: '', projectId: '', reportingToId: '', billability: '', billingRole: '', attendance: '' });
   }
 
@@ -762,8 +710,8 @@ export class WorkAllocationComponent implements OnInit {
   }
 
   deleteAllocation(id: number): void {
-    if(confirm('Are you sure you want to delete this allocation?')) {
-      this.allocations.update(allocs => allocs.filter(a => a.id !== id));
+    if (confirm('Are you sure you want to delete this allocation?')) {
+      this.workAllocationService.deleteAllocation(id);
     }
   }
 }

@@ -13,6 +13,7 @@ import financialConfigController from './controllers/financialConfigController.j
 import timesheetProjectController from './controllers/timesheetProjectController.js';
 import leaveController from './controllers/leaveController.js';
 import holidayController from './controllers/holidayController.js';
+import allocationController from './controllers/allocationController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
@@ -25,6 +26,7 @@ import financialConfigRoutes from './routes/financialConfigRoutes.js';
 import timesheetProjectRoutes from './routes/timesheetProjectRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
 import holidayRoutes from './routes/holidayRoutes.js';
+import allocationRoutes from './routes/allocationRoutes.js';
 
 dotenv.config();
 
@@ -49,6 +51,7 @@ const initDB = async () => {
     await timesheetProjectController.createTable();
     await leaveController.createTable();
     await holidayController.createTable();
+    await allocationController.createTable();
 };
 initDB();
 
@@ -65,6 +68,8 @@ app.use('/api/financial-config', financialConfigRoutes);
 app.use('/api/timesheet-projects', timesheetProjectRoutes);
 app.use('/api/leave-requests', leaveRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/work-allocations', allocationRoutes);
+
 
 // Health Check
 app.get('/health', (req, res) => {
