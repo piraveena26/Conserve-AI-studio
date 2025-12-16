@@ -11,6 +11,8 @@ import metricController from './controllers/metricController.js';
 import goalController from './controllers/goalController.js';
 import financialConfigController from './controllers/financialConfigController.js';
 import timesheetProjectController from './controllers/timesheetProjectController.js';
+import leaveController from './controllers/leaveController.js';
+import holidayController from './controllers/holidayController.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import designationRoutes from './routes/designationRoutes.js';
 import jobRoleRoutes from './routes/jobRoleRoutes.js';
@@ -21,6 +23,8 @@ import metricRoutes from './routes/metricRoutes.js';
 import goalRoutes from './routes/goalRoutes.js';
 import financialConfigRoutes from './routes/financialConfigRoutes.js';
 import timesheetProjectRoutes from './routes/timesheetProjectRoutes.js';
+import leaveRoutes from './routes/leaveRoutes.js';
+import holidayRoutes from './routes/holidayRoutes.js';
 
 dotenv.config();
 
@@ -43,6 +47,8 @@ const initDB = async () => {
     await goalController.createTable();
     await financialConfigController.createTaxSettingsTable();
     await timesheetProjectController.createTable();
+    await leaveController.createTable();
+    await holidayController.createTable();
 };
 initDB();
 
@@ -57,6 +63,8 @@ app.use('/api/metrics', metricRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/financial-config', financialConfigRoutes);
 app.use('/api/timesheet-projects', timesheetProjectRoutes);
+app.use('/api/leave-requests', leaveRoutes);
+app.use('/api/holidays', holidayRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

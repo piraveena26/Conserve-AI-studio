@@ -1,14 +1,10 @@
 
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { HolidayService, Holiday } from '../services/holiday.service';
 
-interface Holiday {
-  id: number;
-  title: string;
-  type: 'National Holiday' | 'Regional Holiday' | 'Company Event';
-  date: string; // YYYY-MM-DD
-}
+
 
 @Component({
   selector: 'app-holidays',
@@ -34,7 +30,7 @@ interface Holiday {
               </tr>
             </thead>
             <tbody>
-              @for (holiday of holidays(); track holiday.id) {
+              @for (holiday of holidayService.holidays(); track holiday.id) {
                 <tr class="bg-white border-b hover:bg-slate-50">
                   <td class="px-6 py-4 font-medium text-slate-900">{{ holiday.title }}</td>
                   <td class="px-6 py-4">{{ holiday.type }}</td>
@@ -149,40 +145,32 @@ interface Holiday {
   imports: [CommonModule, ReactiveFormsModule]
 })
 export class HolidaysComponent {
+  holidayService = inject(HolidayService);
   showModal = signal(false);
   editingHoliday = signal<Holiday | null>(null);
   holidayToDelete = signal<Holiday | null>(null);
   errorMessage = signal<string | null>(null);
-  
-  holidays = signal<Holiday[]>([
-    { id: 1, title: 'New Year\'s Day', type: 'National Holiday', date: '2025-01-01' },
-    { id: 2, title: 'Company Anniversary', type: 'Company Event', date: '2025-06-15' },
-    { id: 3, title: 'Independence Day', type: 'National Holiday', date: '2025-07-04' },
-    { id: 4, title: 'Thanksgiving Day', type: 'National Holiday', date: '2025-11-27' },
-    { id: 5, title: 'Christmas Day', type: 'National Holiday', date: '2025-12-25' },
-  ]);
-  
+
   holidayTypes: Holiday['type'][] = ['National Holiday', 'Regional Holiday', 'Company Event'];
-  private nextId = signal(6);
 
   holidayForm = new FormGroup({
     title: new FormControl('', Validators.required),
     type: new FormControl<Holiday['type'] | ''>('', Validators.required),
     date: new FormControl('', Validators.required),
   });
-  
+
   openModal(holiday: Holiday | null): void {
     this.errorMessage.set(null);
     if (holiday) {
       this.editingHoliday.set(holiday);
-      this.holidayForm.setValue({ 
-        title: holiday.title, 
-        type: holiday.type, 
-        date: holiday.date 
+      this.holidayForm.setValue({
+        title: holiday.title,
+        type: holiday.type,
+        date: holiday.date
       });
     } else {
       this.editingHoliday.set(null);
-      this.holidayForm.reset({title: '', type: '', date: ''});
+      this.holidayForm.reset({ title: '', type: '', date: '' });
     }
     this.showModal.set(true);
   }
@@ -196,12 +184,12 @@ export class HolidaysComponent {
     if (this.holidayForm.invalid) {
       return;
     }
-    
+
     const formValue = this.holidayForm.getRawValue();
     const currentHoliday = this.editingHoliday();
-    
+
     // Check for date conflict
-    const isDateTaken = this.holidays().some(h => 
+    const isDateTaken = this.holidayService.holidays().some(h =>
       h.date === formValue.date && h.id !== currentHoliday?.id
     );
 
@@ -212,21 +200,16 @@ export class HolidaysComponent {
 
     this.errorMessage.set(null);
 
+    const holidayData = {
+      title: formValue.title!,
+      type: formValue.type as Holiday['type'],
+      date: formValue.date!
+    };
+
     if (currentHoliday) {
-      // Edit mode
-      this.holidays.update(hols => 
-        hols.map(h => h.id === currentHoliday.id ? { ...h, ...formValue } as Holiday : h)
-      );
+      this.holidayService.updateHoliday(currentHoliday.id, holidayData);
     } else {
-      // Add mode
-      const newHoliday: Holiday = {
-        id: this.nextId(),
-        title: formValue.title!,
-        type: formValue.type as Holiday['type'],
-        date: formValue.date!
-      };
-      this.holidays.update(hols => [...hols, newHoliday].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
-      this.nextId.update(id => id + 1);
+      this.holidayService.createHoliday(holidayData);
     }
     this.closeModal();
   }
@@ -242,7 +225,7 @@ export class HolidaysComponent {
   confirmDelete(): void {
     const holiday = this.holidayToDelete();
     if (holiday) {
-      this.holidays.update(hols => hols.filter(h => h.id !== holiday.id));
+      this.holidayService.deleteHoliday(holiday.id);
       this.cancelDelete();
     }
   }

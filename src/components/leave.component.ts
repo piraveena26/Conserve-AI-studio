@@ -4,21 +4,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
 import { EmployeeService } from '../services/employee.service';
+import { LeaveService, LeaveRequest } from '../services/leave.service';
 
-interface LeaveRequest {
-  id: number;
-  employeeId: string;
-  employeeName: string;
-  employeeAvatar: string;
-  leaveType: string;
-  leaveRange: 'One Day' | 'More Than a Day';
-  date?: string;
-  fromDate?: string;
-  toDate?: string;
-  reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  appliedOn: Date;
-}
+
 
 @Component({
   selector: 'app-leave',
@@ -344,19 +332,14 @@ interface LeaveRequest {
 export class LeaveComponent {
   private readonly userService = inject(UserService);
   private readonly employeeService = inject(EmployeeService);
+  private readonly leaveService = inject(LeaveService);
 
   activeTab = signal<'applied_leave' | 'all_leave_requests' | 'my_leave' | 'all_leave'>('applied_leave');
   showLeaveModal = signal(false);
   editingLeaveRequest = signal<LeaveRequest | null>(null);
   leaveRequestToDelete = signal<LeaveRequest | null>(null);
-  
-  allLeaveRequests = signal<LeaveRequest[]>([
-    { id: 1, employeeId: 'EMP001', employeeName: 'John Doe', employeeAvatar: 'https://picsum.photos/id/1005/200/200', leaveType: 'Vacation', leaveRange: 'More Than a Day', fromDate: '2025-08-15', toDate: '2025-08-20', reason: 'Family trip to the mountains.', status: 'Approved', appliedOn: new Date('2025-07-01') },
-    { id: 2, employeeId: 'EMP001', employeeName: 'John Doe', employeeAvatar: 'https://picsum.photos/id/1005/200/200', leaveType: 'Sick Leave', leaveRange: 'One Day', date: '2025-09-02', reason: 'Fever and headache.', status: 'Pending', appliedOn: new Date('2025-09-02') },
-    { id: 3, employeeId: 'EMP004', employeeName: 'Alice Brown', employeeAvatar: 'https://picsum.photos/id/1027/200/200', leaveType: 'Personal Leave', leaveRange: 'One Day', date: '2025-09-05', reason: 'Appointment.', status: 'Pending', appliedOn: new Date('2025-09-01') },
-    { id: 4, employeeId: 'EMP002', employeeName: 'Jane Smith', employeeAvatar: 'https://picsum.photos/id/1011/200/200', leaveType: 'Vacation', leaveRange: 'More Than a Day', fromDate: '2025-10-10', toDate: '2025-10-15', reason: 'Conference.', status: 'Approved', appliedOn: new Date('2025-08-15') }
-  ]);
-  private nextRequestId = signal(5);
+
+  allLeaveRequests = this.leaveService.leaveRequests;
 
   currentUser = this.userService.currentUser;
   allEmployees = this.employeeService.employees;
@@ -420,11 +403,11 @@ export class LeaveComponent {
 
   getTabClass(tabName: string) {
     const base = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
-    return this.activeTab() === tabName 
+    return this.activeTab() === tabName
       ? `${base} border-indigo-500 text-indigo-600`
       : `${base} border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300`;
   }
-  
+
   setActiveTab(tab: 'applied_leave' | 'all_leave_requests' | 'my_leave' | 'all_leave') {
     this.activeTab.set(tab);
   }
@@ -474,36 +457,29 @@ export class LeaveComponent {
     const currentUser = this.currentUser();
 
     if (editingReq) {
-        const updatedRequest: LeaveRequest = {
-            ...editingReq,
-            leaveType: formValue.leaveType!,
-            leaveRange: formValue.leaveRange!,
-            date: formValue.date || undefined,
-            fromDate: formValue.fromDate || undefined,
-            toDate: formValue.toDate || undefined,
-            reason: formValue.reason!,
-        };
-        this.allLeaveRequests.update(requests => 
-            requests.map(r => r.id === editingReq.id ? updatedRequest : r)
-        );
+      const updatedData = {
+        leaveType: formValue.leaveType!,
+        leaveRange: formValue.leaveRange!,
+        date: formValue.date || undefined,
+        fromDate: formValue.fromDate || undefined,
+        toDate: formValue.toDate || undefined,
+        reason: formValue.reason!,
+      };
+      this.leaveService.updateLeaveRequest(editingReq.id, updatedData);
     } else if (currentUser?.employeeId) {
-        const newRequest: LeaveRequest = {
-          id: this.nextRequestId(),
-          employeeId: currentUser.employeeId,
-          employeeName: currentUser.name,
-          employeeAvatar: currentUser.avatar,
-          leaveType: formValue.leaveType!,
-          leaveRange: formValue.leaveRange!,
-          date: formValue.date || undefined,
-          fromDate: formValue.fromDate || undefined,
-          toDate: formValue.toDate || undefined,
-          reason: formValue.reason!,
-          status: 'Pending',
-          appliedOn: new Date(),
-        };
-
-        this.allLeaveRequests.update(requests => [...requests, newRequest]);
-        this.nextRequestId.update(id => id + 1);
+      const newRequest = {
+        employeeId: currentUser.employeeId,
+        employeeName: currentUser.name,
+        employeeAvatar: currentUser.avatar,
+        leaveType: formValue.leaveType!,
+        leaveRange: formValue.leaveRange!,
+        date: formValue.date || undefined,
+        fromDate: formValue.fromDate || undefined,
+        toDate: formValue.toDate || undefined,
+        reason: formValue.reason!,
+        status: 'Pending' as const,
+      };
+      this.leaveService.createLeaveRequest(newRequest);
     }
     this.closeLeaveModal();
   }
@@ -519,15 +495,13 @@ export class LeaveComponent {
   confirmDelete(): void {
     const request = this.leaveRequestToDelete();
     if (request) {
-      this.allLeaveRequests.update(requests => requests.filter(r => r.id !== request.id));
+      this.leaveService.deleteLeaveRequest(request.id);
       this.cancelDelete();
     }
   }
 
   updateRequestStatus(requestId: number, status: 'Approved' | 'Rejected'): void {
-    this.allLeaveRequests.update(requests => 
-      requests.map(r => r.id === requestId ? { ...r, status: status } : r)
-    );
+    this.leaveService.updateLeaveStatus(requestId, status);
   }
 
   getStatusClass(status: 'Pending' | 'Approved' | 'Rejected'): string {
